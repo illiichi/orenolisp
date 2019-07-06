@@ -2,6 +2,7 @@
   (:require [orenolisp.view.ui.fx-util :as fx]
             [orenolisp.view.ui.component.typed-history :as typed-history]
             [orenolisp.view.ui.component.context-display :as context-display]
+            [orenolisp.view.ui.component.viewport :as viewport]
             [clojure.core.async :as async])
   (:import
    (javafx.application Application)
@@ -59,10 +60,6 @@
     (.clear)
     (.add content)))
 
-(def %layer-parent (Pane.))
-(defn get-root []
-  %layer-parent)
-
 (defn- create-bottom [left right]
   (let [panel (GridPane.)]
     (doto (.getColumnConstraints panel)
@@ -79,9 +76,7 @@
     panel))
 
 (defn render []
-  (doto (.getChildren %layer-parent)
-    (.clear))
   (doto (BorderPane.)
-    (.setCenter %layer-parent)
+    (.setCenter (viewport/render))
     (.setBottom (create-bottom (typed-history/create-control)
                                (context-display/create)))))
