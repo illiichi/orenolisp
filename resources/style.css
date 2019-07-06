@@ -1,0 +1,47 @@
+@font-face {
+    font-family: Roboto;
+    src: url('Roboto-Light.ttf');
+}
+
+.root {
+    -fx-font-family: 'Roboto';
+    -fx-font-size: 30;
+}
+
+.scroll-pane > .viewport {
+   -fx-background-color: transparent;
+}
+
+.scroll-pane {
+   -fx-background-color: transparent;
+}
+
+.typed-history {
+    -fx-fill: white;
+}
+
+.text-area {
+    -fx-background-color: #000;
+    -fx-text-fill: #00CCFF;
+}
+.text-area .scroll-bar:vertical:disabled {
+    -fx-opacity: 0;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .content{
+    -fx-background-color: transparent;
+}
+
+.scroll-pane {
+    -fx-hbar-policy: never;
+    -fx-vbar-policy: never;
+    -fx-padding:0;
+}
