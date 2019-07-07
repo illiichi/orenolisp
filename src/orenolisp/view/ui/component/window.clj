@@ -39,10 +39,15 @@
       (.fillText exp-id 5 12))))
 
 (def MAX-WIDTH (- 1280 (* 2 PADDING)))
-(defn set-inside-size [ui exp-id w h]
+
+(defn inner-size [w h]
+  [(- w (* 2 PADDING)) (- h TOP-PADDING PADDING)])
+(defn outer-size [w h]
+  [(+ (* 2 PADDING) w) (+ TOP-PADDING PADDING h)])
+
+(defn draw-with-inner-size [ui exp-id {:keys [w h]}]
   (let [w (min MAX-WIDTH w)
-        required-width (+ (* 2 PADDING) w)
-        required-height (+ TOP-PADDING PADDING h)]
+        [required-width required-height] (outer-size w h)]
     (render ui required-width required-height exp-id :audio)))
 
 (defn select-window [window]

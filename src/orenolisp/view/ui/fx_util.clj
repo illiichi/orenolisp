@@ -151,3 +151,6 @@
   (let [[xs ys] (->> (apply mapv vector xxs)
                      (map double-array))]
     (.fillPolygon graphics-context xs ys (count xxs))))
+
+(defn move [component {:keys [x y]}]
+  (.relocate component x y))

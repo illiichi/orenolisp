@@ -55,17 +55,27 @@
 
 (defn calcurate-scroll-position-to-focus [component]
   (let [[cx cy] (fx/ui-center component)
-        bounds (.getLayoutBounds %scroll-pane)
-        sx (- cx (* 1/2 (.getWidth bounds)))
-        sy (- cy (* 1/2 (.getHeight bounds)))]
-    [(/ sx (- v-width (.getWidth bounds))) (/ sy (- v-height (.getHeight bounds)))]))
+        sx (- cx (* 1/2 (.getWidth %scroll-pane)))
+        sy (- cy (* 1/2 (.getHeight %scroll-pane)))]
+    [(/ sx (- v-width (.getWidth %scroll-pane)))
+     (/ sy (- v-height (.getHeight %scroll-pane)))]))
 
-(defn put-component [layer-no component x y]
+(defn put-component [layer-no component]
   (let [layer (nth %layers layer-no)]
-    (fx/add-child layer component)
-    (.relocate component x y)))
+    (fx/add-child layer component)))
 
 (defn focus [current-layer-no new-layer-no component]
   (let [[h v] (calcurate-scroll-position-to-focus component)]
     (move-animation current-layer-no new-layer-no h v)))
 
+(defn center-location []
+  (let [w (* 0.8 (.getWidth %scroll-pane))
+        h (* 0.9 (.getHeight %scroll-pane))
+        sx (* 1/2 (- v-width w))
+        sy (* 1/2 (- v-height h))]
+    [sx sy w h]))
+
+(defn move-center []
+  (doto %scroll-pane
+    (.setVvalue 0.5)
+    (.setHvalue 0.5)))
