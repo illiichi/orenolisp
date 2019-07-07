@@ -67,12 +67,15 @@
   (let [siblings (tr/get-siblings tree current-id)]
     (= (.indexOf siblings current-id) (dec (count siblings)))))
 
-(defn add [{:keys [current-id tree] :as editor} direction value]
-  (let [new-id (generate-new-id)]
-    (tr/add-node tree current-id direction new-id)
-    (-> editor
-        (assoc :current-id new-id)
-        (update :table assoc new-id (->Node value nil)))))
+(defn add
+  ([{:keys [current-id] :as editor} direction value]
+   (add editor current-id direction value))
+  ([{:keys [tree] :as editor} target-id direction value]
+   (let [new-id (generate-new-id)]
+     (tr/add-node tree target-id direction new-id)
+     (-> editor
+         (assoc :current-id new-id)
+         (update :table assoc new-id (->Node value nil))))))
 
 (defn- apply-tree-operation [editor f]
   (let [deleted-ids (f)]
@@ -131,7 +134,7 @@
                 (str indent "  ")
                 editor c)))
 
-(defn check-consistency [printer {:keys [current-id tree table] :as editor}]
+(defn check-consistency [printer {:keys [tree table] :as editor}]
   (if (empty? table)
     (do (when printer (println "(empty)"))
         true)

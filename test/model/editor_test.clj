@@ -1,4 +1,4 @@
-(ns model.expression-test
+(ns model.editor-test
   (:require  [clojure.test :refer [deftest testing is]]
              [orenolisp.model.editor :as ed]))
 
