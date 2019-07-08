@@ -29,7 +29,8 @@
                                            bounds tree (:x bound) (:y bound))))]
     (into {node-id bound} children-bounds)))
 
-(defn calcurate-layout [decide-layout parent-max-width {:keys [tree] :as editor}]
+(defn calcurate-layout [decide-layout {parent-max-width :w
+                                       top-x :x top-y :y} {:keys [tree] :as editor}]
   (letfn [(calcurate-bounds [max-width node-id]
             (let [option-or-size (decide-layout (ed/get-content editor node-id))]
               (if (instance? Size option-or-size)
@@ -45,5 +46,5 @@
           {:keys [size bounds]} (calcurate-bounds parent-max-width root-node-id)]
       (-> bounds
           (assoc root-node-id (->Bound 0 0 size))
-          (convert-from-local-coord tree 0 0 root-node-id)))))
+          (convert-from-local-coord tree top-x top-y root-node-id)))))
 

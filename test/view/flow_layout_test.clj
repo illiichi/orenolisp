@@ -1,4 +1,4 @@
-(ns ui.flow-layout-test
+(ns view.flow-layout-test
   (:require  [clojure.test :refer [deftest testing is] :as t]
              [orenolisp.view.layout.layout :as l]
              [orenolisp.view.layout.flow-layout :as fl]))
