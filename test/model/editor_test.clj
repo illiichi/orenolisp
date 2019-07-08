@@ -21,6 +21,11 @@
           (ed/move-most :parent)
           (ed/move-most :child)
           (ed/add :child 9)
+          ed/print-editor))
+  (is (-> (ed/new-editor)
+          (ed/add :child 1)
+          (ed/add :child 2)
+          (ed/add :self 3)
           ed/print-editor)))
 
 (deftest get-ids-test

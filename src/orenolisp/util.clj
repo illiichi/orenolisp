@@ -13,6 +13,12 @@
 
 (defn uuid [] (.toString (java.util.UUID/randomUUID)))
 
+(defmacro when-> [x cond body]
+  `(if ~cond (-> ~x ~body) ~x))
+
+(defn map-kv [f m]
+  (reduce-kv (fn [acc k v] (assoc acc k (f k v)))
+             {} m))
 (defn map-value [f m]
   (reduce-kv (fn [acc k v] (assoc acc k (f v)))
              {} m))

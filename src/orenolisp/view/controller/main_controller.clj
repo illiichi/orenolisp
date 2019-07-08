@@ -12,26 +12,33 @@
 (defn- should-enter? [{:keys [doing]} can-type?]
   (and (= doing :typing) can-type?))
 
-(defn handle-key-event [{:keys [can-type?] :as key} state]
-  (println key)
+(defn process-command [state commands]
+  (let [next-state (if (sequential? commands) (reduce (fn [state op] (op state))
+                                                     state commands)
+                       (commands state))]
+    (or next-state state)))
+
+(defn get-commands-by-key-event [state {:keys [can-type?] :as key}]
   (let [key (dissoc key :can-type?)
         window (st/current-window state)
         context (:context window)
-        operation (key-table/get-operation context key (:tmp-keymap state))
-        next-state (cond
-                     (sequential? operation) (reduce (fn [state op] (op state))
-                                                     state operation)
-                     operation               (operation state)
-                     (should-enter? context can-type?) (println "type-letters:" key)
-                     true
-                     (println "no operation defined:"
-                              (:target-type context)
-                              (:doing context) key))]
-    (or next-state state)))
+        commands (key-table/get-operation context key (:tmp-keymap state))]
+    (or commands
+        (if (should-enter? context can-type?)
+          (println "type-letters:" key)
+          (println "no commands defined:"
+                   (:target-type context)
+                   (:doing context) key)))))
+
+(defn dispatch-command [commands]
+  (swap! %state #(or (process-command % commands)
+                     %)))
 
 (defn on-key-event [key]
-  (swap! %state #(handle-key-event key %))
-  (history/update-typed-key key))
+  (history/update-typed-key key)
+  (swap! %state #(or (some->> (get-commands-by-key-event % key)
+                              (process-command %))
+                     %)))
 
 (defn initialize-state []
   (def %state (atom (st/initial-state))))

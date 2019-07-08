@@ -55,8 +55,13 @@
   ([editor] (get-content (:current-id editor)))
   ([{:keys [current-id table]} node-id]
    (some-> (get table node-id) :content)))
-(defn get-attributes [{:keys [current-id table]}]
-  (some-> (get table current-id) :attributes))
+(defn get-attributes
+  ([editor] (get-attributes editor (:current-id editor)))
+  ([{:keys [table]} target-id] (some-> (get table target-id) :attributes)))
+
+(defn set-attributes
+  ([editor target-id attrs]
+   (assoc-in editor [:table target-id :attributes] attrs)))
 
 (defn root? [{:keys [current-id tree]}]
   (not (tr/get-parent tree current-id)))
@@ -75,7 +80,9 @@
      (tr/add-node tree target-id direction new-id)
      (-> editor
          (assoc :current-id new-id)
-         (update :table assoc new-id (->Node value nil))))))
+         (update :table assoc new-id (->Node value nil))
+         (ut/when-> (= direction :self)
+                    (update :table dissoc target-id))))))
 
 (defn- apply-tree-operation [editor f]
   (let [deleted-ids (f)]

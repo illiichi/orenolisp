@@ -1,5 +1,6 @@
 (ns orenolisp.view.ui.component.viewport
-  (:require [orenolisp.view.ui.fx-util :as fx])
+  (:require [orenolisp.view.ui.fx-util :as fx]
+            [orenolisp.view.ui.component.animations :as anim])
   (:import (javafx.scene.layout Pane StackPane)
            (javafx.scene.control ScrollPane)))
 
@@ -60,9 +61,19 @@
     [(/ sx (- v-width (.getWidth %scroll-pane)))
      (/ sy (- v-height (.getHeight %scroll-pane)))]))
 
-(defn put-component [layer-no component]
+(defn- with-layer [layer-no f]
   (let [layer (nth %layers layer-no)]
-    (fx/add-child layer component)))
+    (f layer)))
+
+(defn put-component [layer-no component]
+  (with-layer layer-no #(fx/add-child % component)))
+
+(defn put-components [layer-no components]
+  (with-layer layer-no
+    #(doseq [component components] (fx/add-child % component))))
+(defn remove-components [components]
+  (doseq [component components]
+    (fx/remove-node component (anim/dissapear component))))
 
 (defn focus [current-layer-no new-layer-no component]
   (let [[h v] (calcurate-scroll-position-to-focus component)]

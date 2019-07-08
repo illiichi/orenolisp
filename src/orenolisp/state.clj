@@ -1,7 +1,7 @@
 (ns orenolisp.state)
 
 (defn ->State [current-exp-id windows expressions]
-  {:current current-exp-id
+  {:current-exp-id current-exp-id
    :windows windows
    :expressions expressions})
 
