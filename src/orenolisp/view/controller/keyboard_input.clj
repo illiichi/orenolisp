@@ -51,13 +51,8 @@
     (if (empty? specials) ret
         (assoc ret :specials specials))))
 
-(defn- handle-key-event [on-key-event key]
-  (on-key-event (convert-key key)))
+(defn- handle-key-event [key]
+  {:type :keyboard :key (convert-key key)})
 
-(defn start-loop [input-ch on-key-event]
-  (async/go-loop []
-    (let [key (async/<! input-ch)]
-      (try (#'handle-key-event on-key-event key)
-           (catch Exception e
-             (.printStackTrace e)))
-      (recur))))
+(def keyboard-ch (async/chan 1 (map handle-key-event)))
+

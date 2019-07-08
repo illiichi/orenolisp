@@ -31,14 +31,22 @@
                    (:doing context) key)))))
 
 (defn dispatch-command [commands]
-  (swap! %state #(or (process-command % commands)
-                     %)))
+  (async/go (async/>! event-ch {:type :command :command commands})))
 
-(defn on-key-event [key]
+(defmulti on-event :type)
+(defmethod on-event :keyboard [{:keys [key]}]
   (history/update-typed-key key)
-  (swap! %state #(or (some->> (get-commands-by-key-event % key)
-                              (process-command %))
-                     %)))
+  (swap! %state #(or (some->> (get-commands-by-key-event % key) (process-command %)) %)))
+(defmethod on-event :command [{:keys [command]}]
+  (swap! %state #(or (some->> command (process-command %)) %)))
 
 (defn initialize-state []
   (def %state (atom (st/initial-state))))
+
+(defn start-loop [ch]
+  (async/go-loop []
+    (let [event (async/<! ch)]
+      (try (on-event event)
+           (catch Exception e
+             (.printStackTrace e)))
+      (recur))))

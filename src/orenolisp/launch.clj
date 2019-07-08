@@ -6,16 +6,17 @@
             [orenolisp.commands.commands :as cmd]
             [orenolisp.view.ui.component.viewport :as viewport]
             [orenolisp.view.controller.main-controller :as mc]
-            [orenolisp.view.controller.window-controller :as wc])
+            [orenolisp.view.controller.window-controller :as wc]
+            [clojure.core.async :as async])
   (:import (javafx.scene.paint Color)
            (javafx.scene.canvas Canvas)
            (javafx.scene.text Text)))
 
 (fx/initialize)
 
-(do (fx/run-now (mu/render-base mc/event-ch)
+(do (fx/run-now (mu/render-base ki/keyboard-ch)
                 (mu/layout-content (mu/render)))
-    (ki/start-loop mc/event-ch mc/on-key-event)
+    (mc/start-loop (async/pipe ki/keyboard-ch mc/event-ch))
     (viewport/move-center))
 
 (do
