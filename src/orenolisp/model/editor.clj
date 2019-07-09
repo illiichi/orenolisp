@@ -52,8 +52,8 @@
 (def generate-new-id (ut/generate-counter))
 
 (defn get-content
-  ([editor] (get-content (:current-id editor)))
-  ([{:keys [current-id table]} node-id]
+  ([editor] (get-content editor (:current-id editor)))
+  ([{:keys [table]} node-id]
    (some-> (get table node-id) :content)))
 (defn get-attributes
   ([editor] (get-attributes editor (:current-id editor)))

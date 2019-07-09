@@ -12,6 +12,9 @@
 (defn current-window [{:keys [current-exp-id windows]}]
   (get windows current-exp-id))
 
+(defn current-context [{:keys [current-exp-id windows]}]
+  (get-in windows [current-exp-id :context]))
+
 (defn temporary-keymap [state description keymap]
   (-> state
       (assoc :tmp-keymap keymap

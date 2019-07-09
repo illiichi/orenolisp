@@ -25,7 +25,7 @@
   (doto (->Window exp-id (->Layout (->Position x y)
                                          (->Size inner-width inner-height)
                                          layer-no)
-                  (wu/create) {} {})
+                  (wu/create) {} {:doing :selecting})
     (put-into-viewport)
     (draw-frame)))
 
@@ -84,5 +84,6 @@
         new-exp-table (ut/map-kv (partial update-node new-editor new-bounds
                                           (union created modified)) exp-table)]
     ;; change window height
-    ;; change context
-    (assoc window :exp-table new-exp-table)))
+    (-> window
+        (assoc :exp-table new-exp-table)
+        (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))

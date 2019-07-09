@@ -14,8 +14,11 @@
 
 (defn process-command [state commands]
   (let [next-state (if (sequential? commands) (reduce (fn [state op] (op state))
-                                                     state commands)
+                                                      state commands)
                        (commands state))]
+    (some-> next-state
+            st/current-context
+            context-display/update-view-by-context)
     (or next-state state)))
 
 (defn get-commands-by-key-event [state {:keys [can-type?] :as key}]
@@ -27,7 +30,7 @@
         (if (should-enter? context can-type?)
           (println "type-letters:" key)
           (println "no commands defined:"
-                   (:target-type context)
+                   (or (:node-type context) (:target-type context))
                    (:doing context) key)))))
 
 (defn dispatch-command [commands]
