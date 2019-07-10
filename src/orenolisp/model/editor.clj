@@ -107,7 +107,7 @@
   (if (root? editor)
     (new-editor)
     (let [next-id (let [siblings (tr/get-siblings tree current-id)]
-                    (if (empty? siblings)
+                    (if (<= (count siblings) 1)
                       (tr/get-parent tree current-id)
                       (or (ut/find-next current-id siblings)
                           (ut/find-prev current-id siblings))))]
