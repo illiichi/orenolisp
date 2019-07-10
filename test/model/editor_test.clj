@@ -28,6 +28,31 @@
           (ed/add :self 3)
           ed/print-editor)))
 
+(deftest add-editor-test
+  (let [editor (-> (ed/new-editor)
+                   (ed/add :child 1)
+                   (ed/add :child 2)
+                   (ed/add :child 3)
+                   (ed/move :parent)
+                   (ed/move :parent)
+                   (ed/add :child 4)
+                   (ed/add :left 5)
+                   (ed/move :left))
+        editor2 (-> (ed/new-editor)
+                    (ed/add :child "a")
+                    (ed/add :child "b")
+                    (ed/add :child "c")
+                    (ed/move :parent)
+                    (ed/move :parent)
+                    (ed/add :child "d")
+                    (ed/add :left "e"))]
+    (is (-> (ed/copy editor)
+            (ed/add-editor :child editor2)
+            ed/print-editor))
+    (is (-> editor
+            (ed/add-editor :self editor2)
+            ed/print-editor))))
+
 (deftest get-ids-test
   (let [editor (-> (ed/new-editor)
                    (ed/add :child 1)

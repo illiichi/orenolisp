@@ -72,22 +72,29 @@
   (let [siblings (tr/get-siblings tree current-id)]
     (= (.indexOf siblings current-id) (dec (count siblings)))))
 
+(defn- apply-tree-operation [editor f]
+  (let [deleted-ids (f)]
+    (-> editor
+        (update :table (fn [table] (apply dissoc table deleted-ids))))))
+
 (defn add
   ([{:keys [current-id] :as editor} direction value]
    (add editor current-id direction value))
   ([{:keys [tree] :as editor} target-id direction value]
    (let [new-id (generate-new-id)]
-     (tr/add-node tree target-id direction new-id)
      (-> editor
+         (apply-tree-operation #(tr/add-node tree target-id direction new-id))
          (assoc :current-id new-id)
-         (update :table assoc new-id (->Node value nil))
-         (ut/when-> (= direction :self)
-                    (update :table dissoc target-id))))))
+         (update :table assoc new-id (->Node value nil))))))
 
-(defn- apply-tree-operation [editor f]
-  (let [deleted-ids (f)]
-    (-> editor
-        (update :table (fn [table] (apply dissoc table deleted-ids))))))
+(defn add-editor
+  ([{:keys [current-id] :as editor} direction editor2]
+   (add-editor editor current-id direction editor2))
+  ([{:keys [tree] :as editor} target-id direction editor2]
+   (-> editor
+       (apply-tree-operation #(tr/add tree target-id direction (:tree editor2)))
+       (assoc :current-id (get-id editor2 :self))
+       (update :table merge (:table editor2)))))
 
 (defn transport [{:keys [current-id tree] :as editor} direction target-id]
   (-> editor
