@@ -1,5 +1,6 @@
 (ns orenolisp.view.layout.flow-layout
-  (:require [orenolisp.view.layout.layout :as l]))
+  (:require [orenolisp.util :as ut]
+            [orenolisp.view.layout.layout :as l]))
 
 (defrecord FlowOption [indent-top padding-x padding-y gap-v gap-h min-width min-height]
   Object
@@ -9,7 +10,9 @@
                              {:keys [calcurate-bounds]}
                              max-width
                              children-ids]
-  (letfn [(empty-line [top-x top-y]
+  (letfn [(actual-indent [line indent top?]
+            (if (and top? (<= (count (:elements line)) 1)) 0 indent))
+          (empty-line [top-x top-y]
             {:x top-x :y top-y :width 0 :height 0 :elements {}})
 
           (concat-line [line gap node-id size]
@@ -21,31 +24,34 @@
 
           (new-line [indent prev-line]
             (-> (empty-line (:x prev-line) (+ (:y prev-line) (:height prev-line)))
-                (update :width (partial + indent))
+                (ut/when-> (not (nil? indent)) (update :width (partial + indent)))
                 (update :y (partial + gap-h))))
-          (concat-new-line [indent prev-line node-id size]
-            (-> (new-line indent prev-line)
+          (concat-new-line [indent prev-line node-id size top?]
+            (-> (new-line (actual-indent prev-line indent top?) prev-line)
                 (concat-line 0 node-id size)))]
     (loop [[node-id & xs] children-ids
-           indent 0
+           indent nil
            line (empty-line padding-x padding-y)
            lines []
            acc-bounds {}]
       (if (nil? node-id)
         {:lines (conj lines line) :bounds acc-bounds}
         (let [both-paren-width (* 2 padding-x)
-              {:keys [size bounds]} (calcurate-bounds (- max-width indent both-paren-width)
+              next-max-width (- max-width (or indent 0) both-paren-width)
+              {:keys [size bounds]} (calcurate-bounds next-max-width
                                                       node-id)
               gap (if (-> line :elements empty?) 0 gap-v)
               acc-bounds (merge acc-bounds bounds)
-              next-indent (if (and indent-top (= indent 0)) (+ gap-v (:w size)) indent)]
+              next-indent (if (and indent-top (nil? indent)) (+ gap-v (:w size)) indent)]
           (cond
             (:newline? size)
-            (recur xs next-indent (new-line next-indent line)
-                   (conj lines (concat-line line 0 node-id size))
-                   acc-bounds)
+            (let [indent (actual-indent line next-indent (empty? lines))]
+              (recur xs indent (new-line indent line)
+                     (conj lines (concat-line line 0 node-id size))
+                     acc-bounds))
             (> (+ (:w size) (:width line) both-paren-width gap) max-width)
-            (recur xs next-indent (concat-new-line next-indent line node-id size)
+            (recur xs next-indent (concat-new-line next-indent line node-id size
+                                                   (empty? lines))
                    (conj lines line) acc-bounds)
             true
             (recur xs next-indent
