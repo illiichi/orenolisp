@@ -34,11 +34,11 @@
   (merge
    global-keymap
    node-selecting-keymap
-   {{:char \a} (cmd/window-command #(ed/move % :child))
-    {:char \e} (cmd/window-command #(-> % (ed/move :child) (ed/move-most :right)))
+   {{:char \a} (cmd/window-command-pure #(ed/move % :child))
+    {:char \e} (cmd/window-command-pure #(-> % (ed/move :child) (ed/move-most :right)))
     {:char \i :specials #{:ctrl}} [(cmd/add :child (form/input-ident))
                                    cmd/switch-to-typing-mode]
-    {:char \s} (cmd/window-command #(-> % (ed/move :child) (ed/move :right)))}))
+    {:char \s} (cmd/window-command-pure #(-> % (ed/move :child) (ed/move :right)))}))
 
 (def ident-selecting-keymap
   (merge

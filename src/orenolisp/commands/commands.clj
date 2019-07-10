@@ -1,5 +1,6 @@
 (ns orenolisp.commands.commands
-  (:require [orenolisp.state :as st]
+  (:require [orenolisp.util :as ut]
+            [orenolisp.state :as st]
             [orenolisp.view.ui.fx-util :as fx]
             [orenolisp.model.editor :as ed]
             [orenolisp.view.controller.expression-controller :as ec]
@@ -19,7 +20,7 @@
 (defn cancel-temporary-keymap [state]
   (st/temporary-keymap state nil nil))
 
-(defn- with-current-window [{:keys [current-exp-id windows expressions] :as state} f]
+(defn- with-current-window [{:keys [current-exp-id windows expressions] :as state} modified? f]
   (let [prev-exp (get expressions current-exp-id)
         new-exp (-> prev-exp
                     (ec/apply-step-function f))
@@ -28,10 +29,13 @@
                                          (:editor new-exp)))]
     (-> state
         (assoc-in [:expressions current-exp-id] new-exp)
-        (assoc-in [:windows current-exp-id] new-window))))
+        (assoc-in [:windows current-exp-id] new-window)
+        (ut/when-> modified? (assoc-in [:windows current-exp-id :context :modified?] true)))))
 
 (defn window-command [f]
-  (fn [state] (with-current-window state f)))
+  (fn [state] (with-current-window state true f)))
+(defn window-command-pure [f]
+  (fn [state] (with-current-window state false f)))
 
 (defn add [direction form]
   (window-command #(ed/add % direction form)))
@@ -42,9 +46,9 @@
                          (ed/jump node-id)))))
 
 (defn move [direction]
-  (window-command #(ed/move % direction)))
+  (window-command-pure #(ed/move % direction)))
 (defn move-most [direction]
-  (window-command #(ed/move-most % direction)))
+  (window-command-pure #(ed/move-most % direction)))
 (defn edit [f]
   (window-command #(ed/edit % f)))
 (defn delete []
