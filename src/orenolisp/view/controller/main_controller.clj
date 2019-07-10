@@ -18,9 +18,11 @@
   (let [next-state (if (sequential? commands) (reduce (fn [state op] (op state))
                                                       state commands)
                        (commands state))]
-    (some-> next-state
-            st/current-context
-            context-display/update-view-by-context)
+    (if-let [description (:keymap-description next-state)]
+      (context-display/update-view description)
+      (some-> next-state
+              st/current-context
+              context-display/update-view-by-context))
     (or next-state state)))
 
 (defn get-commands-by-key-event [state {:keys [can-type?] :as key}]

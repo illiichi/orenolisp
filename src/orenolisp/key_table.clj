@@ -6,13 +6,20 @@
             [orenolisp.commands.text-commands :as tx]))
 
 (def initial-keymap
-  {{:char "<space>"} [cmd/open-initial-window
+  {{:char "<space>"} [cmd/open-new-window
                       (cmd/add :child (form/input-ident))
                       cmd/switch-to-typing-mode]
    {:char \a :specials #{:ctrl :alt}} [cmd/switch-to-selecting-mode
                                        (cmd/move-most :parent)]})
 
-(def global-keymap {})
+(def layer-keymap
+  {{:char \n} [cmd/open-new-window
+               (cmd/add :child (form/input-ident))
+               cmd/switch-to-typing-mode]})
+
+(def global-keymap
+  {{:char \l :specials #{:super}} (cmd/set-temporary-keymap "layer"
+                                                             layer-keymap)})
 (def node-selecting-keymap
   (merge
    global-keymap

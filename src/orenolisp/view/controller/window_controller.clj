@@ -23,21 +23,29 @@
 
 (defn new-window [exp-id layer-no x y inner-width inner-height]
   (doto (->Window exp-id (->Layout (->Position x y)
-                                         (->Size inner-width inner-height)
-                                         layer-no)
+                                   (->Size inner-width inner-height)
+                                   layer-no)
                   (wu/create) {} {:doing :selecting})
     (put-into-viewport)
     (draw-frame)))
 
-(defn initial-window [exp-id]
-  (let [[x y outer-width outer-height] (viewport/center-location)
-        [sx sy] (wu/inner-pos x y)
-        [inner-width inner-height] (wu/inner-size outer-width outer-height)]
-    (new-window exp-id 0 sx sy inner-width inner-height)))
+(def prepared-locations (atom (cycle [[0.55 0.8 0.5 0.5]
+                                      [0.55 0.8 0.825 0.5]
+                                      [0.55 0.8 0.175 0.5]])))
+
+(defn pop-location []
+  (first (swap! prepared-locations rest)))
 
 (defn focus [{:keys [layout win-ui]} current-layer-no]
   (viewport/focus current-layer-no (:layer-no layout) win-ui))
 
+(defn open-new-window [exp-id]
+  (let [[x y outer-width outer-height] (apply viewport/location-by-ratio (pop-location))
+        [sx sy] (wu/inner-pos x y)
+        [inner-width inner-height] (wu/inner-size outer-width outer-height)
+        window (new-window exp-id 0 sx sy inner-width inner-height)]
+    (focus window 0)
+    window))
 
 (defn- create-and-delete-ui [editor layer-no exp-table created-ids deleted-ids]
   (let [new-exps (->> created-ids

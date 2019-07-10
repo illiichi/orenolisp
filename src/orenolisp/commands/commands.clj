@@ -7,9 +7,9 @@
             [orenolisp.view.controller.expression-controller :as ec]
             [orenolisp.view.controller.window-controller :as wc]))
 
-(defn open-initial-window [state]
+(defn open-new-window [state]
   (let [new-exp (ec/empty-expression)
-        new-win (fx/run-now (wc/initial-window (:exp-id new-exp)))]
+        new-win (fx/run-now (wc/open-new-window (:exp-id new-exp)))]
     (-> state
         (update :windows #(assoc % (:exp-id new-exp) new-win))
         (update :expressions #(assoc % (:exp-id new-exp) new-exp))

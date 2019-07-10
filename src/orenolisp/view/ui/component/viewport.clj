@@ -79,14 +79,19 @@
   (let [[h v] (calcurate-scroll-position-to-focus component)]
     (move-animation current-layer-no new-layer-no h v)))
 
-(defn center-location []
-  (let [w (* 0.8 (.getWidth %scroll-pane))
-        h (* 0.9 (.getHeight %scroll-pane))
-        sx (* 1/2 (- v-width w))
-        sy (* 1/2 (- v-height h))]
-    [sx sy w h]))
+(defn location-by-ratio
+  "w h - ratio to the screen, x y - center position"
+  [w h cx cy]
+  (let [screen-width (.getWidth %scroll-pane)
+        screen-height (.getHeight %scroll-pane)
+        width (* w screen-width)
+        height (* h screen-height)
+        sx (- (* cx v-width) (* 1/2 width))
+        sy (- (* cy v-height) (* 1/2 height))]
+    [sx sy width height]))
 
 (defn move-center []
   (doto %scroll-pane
     (.setVvalue 0.5)
     (.setHvalue 0.5)))
+
