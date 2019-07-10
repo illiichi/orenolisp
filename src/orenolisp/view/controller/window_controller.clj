@@ -60,7 +60,7 @@
   (not= (dissoc old-attributes :position) (dissoc new-attributes :position)))
 
 (defn- update-node [editor bounds modified-ids node-id {:keys [attributes component] :as m}]
-  (let [{:keys [x y size]} (or (get bounds node-id) (ut/error "bounds not found!" node-id))
+  (let [{:keys [x y size]} (or (get bounds node-id) (ut/error "bounds not found!" node-id bounds))
         new-attributes (-> attributes
                            (assoc :focus? (= node-id (:current-id editor)))
                            (assoc :position {:x x :y y})

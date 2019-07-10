@@ -26,18 +26,18 @@
   IConversion
   (sexp->node [this sexp]
     (match sexp
-           (['in (['l4/sound-bus layer-id :out-bus] :seq) 2] :seq)
-           [{:type :in :rate :audio :layer-id (name layer-id)} []]
-           (['in:kr (['l4/control-bus layer-id :out-bus] :seq) 1] :seq)
-           [{:type :in :rate :control :layer-id (name layer-id)} []]
+           (['in (['l4/sound-bus exp-id :out-bus] :seq) 2] :seq)
+           [{:type :in :rate :audio :exp-id (name exp-id)} []]
+           (['in:kr (['l4/control-bus exp-id :out-bus] :seq) 1] :seq)
+           [{:type :in :rate :control :exp-id (name exp-id)} []]
            _ nil))
-  (node->sexp [this {:keys [rate layer-id] :as node} children]
+  (node->sexp [this {:keys [rate exp-id] :as node} children]
     (when (= (:type node) :in)
       (let [[in-func bus-func num-chan] (case rate
                                  :audio ['in 'l4/sound-bus 2]
                                  :control ['in:kr 'l4/control-bus 1]
                                  (throw (Exception. (str "unknown rate: " rate))))]
-        (list in-func (list bus-func (keyword layer-id) :out-bus) num-chan)))))
+        (list in-func (list bus-func (keyword exp-id) :out-bus) num-chan)))))
 
 (def conversions (seq [(->InConversion) (->CommonConversion)]))
 (defn- find-first-non-nil [f xs]

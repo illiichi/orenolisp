@@ -42,6 +42,5 @@
   [{:keys [doing target-type node-type] :as context}]
   (when context
     (render-text (name doing)
-                 (clojure.string/upper-case (name (or node-type
-                                                      target-type))))))
+                 (some->> (or node-type target-type) name clojure.string/upper-case))))
 

@@ -8,8 +8,8 @@
 (defn- calcurate-string-size [string]
   (l/->Size (+ (* 2 LINE-WIDTH) (* f/LABEL-FONT-WIDTH (count string)))
             (+ 8 f/LABEL-FONT-HEIGHT)))
-(defn- calcurate-in-ugen-size [{:keys [layer-id]}]
-  (l/->Size (+ (* 3 12) f/PORTAL-FONT-HEIGHT (* f/PORTAL-FONT-WIDTH (count layer-id)))
+(defn- calcurate-in-ugen-size [{:keys [exp-id]}]
+  (l/->Size (+ (* 3 12) f/PORTAL-FONT-HEIGHT (* f/PORTAL-FONT-WIDTH (count exp-id)))
             (+ (* 2 8) f/PORTAL-FONT-HEIGHT)))
 
 (defn build-size-or-option [{:keys [type value] :as m}]
