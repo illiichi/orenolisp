@@ -2,6 +2,7 @@
   (:require [orenolisp.util :as ut]
             [orenolisp.model.forms :as form]
             [orenolisp.model.editor :as ed]
+            [orenolisp.view.ui.component.animations :as anim]
             [orenolisp.commands.commands :as cmd]
             [orenolisp.commands.text-commands :as tx]))
 
@@ -30,8 +31,10 @@
     {:char \a :specials #{:ctrl :alt}} (cmd/move-most :parent)
     {:char \d :specials #{:ctrl}} (cmd/delete)
     {:char \r} (cmd/raise)
-    {:char \}}         (cmd/with-keep-position #(ed/add % :parent (form/vector))) ; anim
-    {:char \(}         (cmd/with-keep-position #(ed/add % :parent (form/paren)))  ; anim
+    {:char \}}         [(cmd/with-keep-position #(ed/add % :parent (form/vector)))
+                        (cmd/animate :parent anim/zoom-in)]
+    {:char \(}         [(cmd/with-keep-position #(ed/add % :parent (form/paren)))
+                        (cmd/animate :parent anim/zoom-in)]
     {:char "<space>"}  [(cmd/add :right (form/input-ident))
                         cmd/switch-to-typing-mode]
     {:char "<SPACE>"}  [(cmd/add :left (form/input-ident))

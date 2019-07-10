@@ -17,6 +17,9 @@
 (defn current-editor [{:keys [current-exp-id expressions]}]
   (get-in expressions [current-exp-id :editor]))
 
+(defn get-ui [{:keys [current-exp-id windows]} node-id]
+  (get-in windows [current-exp-id :exp-table node-id :component]))
+
 (defn temporary-keymap [state description keymap]
   (-> state
       (assoc :tmp-keymap keymap

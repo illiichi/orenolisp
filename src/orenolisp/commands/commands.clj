@@ -107,3 +107,10 @@
             (if (number? v)
               (assoc m :value (str (f v)))
               m)))))
+
+(defn animate [direction animation-func]
+  (fn [state]
+    (let [target-id (ed/get-id (st/current-editor state) direction)
+          ui (st/get-ui state target-id)]
+      (.play (animation-func ui)))
+    state))
