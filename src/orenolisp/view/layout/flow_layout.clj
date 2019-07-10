@@ -33,9 +33,10 @@
            acc-bounds {}]
       (if (nil? node-id)
         {:lines (conj lines line) :bounds acc-bounds}
-        (let [{:keys [size bounds]} (calcurate-bounds (- max-width indent) node-id)
+        (let [both-paren-width (* 2 padding-x)
+              {:keys [size bounds]} (calcurate-bounds (- max-width indent both-paren-width)
+                                                      node-id)
               gap (if (-> line :elements empty?) 0 gap-v)
-              padding (* 2 padding-x)
               acc-bounds (merge acc-bounds bounds)
               next-indent (if (and indent-top (= indent 0)) (+ gap-v (:w size)) indent)]
           (cond
@@ -43,7 +44,7 @@
             (recur xs next-indent (new-line next-indent line)
                    (conj lines (concat-line line 0 node-id size))
                    acc-bounds)
-            (> (+ (:w size) (:width line) padding gap) max-width)
+            (> (+ (:w size) (:width line) both-paren-width gap) max-width)
             (recur xs next-indent (concat-new-line next-indent line node-id size)
                    (conj lines line) acc-bounds)
             true

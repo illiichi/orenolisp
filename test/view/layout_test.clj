@@ -21,5 +21,13 @@
         bounds (l/calcurate-layout layout-decision/build-size-or-option option editor)]
     (is (ed/check-consistency (bounds-printer bounds) editor))))
 
+(deftest layout-sexp2
+  (let [editor (ed/new-editor)
+        sexp '(Ain-osc (Bin-osc0123456 8 (Cin-osc123456 8 9)))
+        editor (conv/convert-sexp->editor editor sexp)
+        option {:w 684 :x 0 :y 0}
+        bounds (l/calcurate-layout layout-decision/build-size-or-option option editor)]
+    (is (ed/check-consistency (bounds-printer bounds) editor))))
+
 
 
