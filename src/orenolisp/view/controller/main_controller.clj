@@ -2,6 +2,8 @@
   (:require [clojure.core.async :as async]
             [orenolisp.key-table :as key-table]
             [orenolisp.state :as st]
+            [orenolisp.commands.commands :as cmd]
+            [orenolisp.commands.text-commands :as tx]
             [orenolisp.view.ui.component.typed-history :as history]
             [orenolisp.view.ui.component.context-display :as context-display]
             [orenolisp.view.ui.fx-util :as fx]))
@@ -28,7 +30,7 @@
         commands (key-table/get-operation context key (:tmp-keymap state))]
     (or commands
         (if (should-enter? context can-type?)
-          (println "type-letters:" key)
+          (cmd/edit #(tx/insert-char % (str (:char key))))
           (println "no commands defined:"
                    (or (:node-type context) (:target-type context))
                    (:doing context) key)))))

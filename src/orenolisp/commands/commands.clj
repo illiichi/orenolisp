@@ -35,7 +35,24 @@
 
 (defn add [direction form]
   (window-command #(ed/add % direction form)))
+(defn add-with-keep-position [direction form]
+  (window-command #(let [node-id (ed/get-id % :self)]
+                     (-> %
+                         (ed/add direction form)
+                         (ed/jump node-id)))))
+
 (defn move [direction]
   (window-command #(ed/move % direction)))
+(defn move-most [direction]
+  (window-command #(ed/move-most % direction)))
 (defn edit [f]
   (window-command #(ed/edit % f)))
+(defn delete []
+  (window-command #(ed/delete %)))
+(defn raise []
+  (window-command #(ed/transport % :self (ed/get-id % :parent))))
+
+(defn switch-to-typing-mode [state]
+  (st/update-current-context state #(assoc % :doing :typing)))
+(defn switch-to-selecting-mode [state]
+  (st/update-current-context state #(assoc % :doing :selecting)))
