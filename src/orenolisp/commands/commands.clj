@@ -3,6 +3,7 @@
             [orenolisp.state :as st]
             [orenolisp.view.ui.fx-util :as fx]
             [orenolisp.model.editor :as ed]
+            [orenolisp.model.conversion :as conv]
             [orenolisp.view.controller.expression-controller :as ec]
             [orenolisp.view.controller.window-controller :as wc]))
 
@@ -39,11 +40,14 @@
 
 (defn add [direction form]
   (window-command #(ed/add % direction form)))
+
+(defn with-keep-position [f]
+  (window-command
+   #(let [node-id (ed/get-id % :self)]
+      (some-> % f (ed/jump node-id)))))
+
 (defn add-with-keep-position [direction form]
-  (window-command #(let [node-id (ed/get-id % :self)]
-                     (-> %
-                         (ed/add direction form)
-                         (ed/jump node-id)))))
+  (with-keep-position #(ed/add % direction form)))
 
 (defn move [direction]
   (window-command-pure #(ed/move % direction)))
@@ -60,3 +64,46 @@
   (st/update-current-context state #(assoc % :doing :typing)))
 (defn switch-to-selecting-mode [state]
   (st/update-current-context state #(assoc % :doing :selecting)))
+
+(defn complete [table]
+  (window-command
+   (fn [editor]
+     (let [v (some->> (ed/get-content editor) :value)]
+       (when-let [sexp (->> v (get table))]
+         (->> (conv/convert-sexp->editor sexp)
+              (ed/add-editor editor :self)))))))
+
+(defn update-in-ugen-layer-id [find-f]
+  (fn [state]
+    (with-current-window state true
+      (fn [editor]
+        (ed/edit editor
+                 (fn [{current :exp-id :as m}]
+                   (if-let [next-win (try (some-> (find-f #(= current (:exp-id %))
+                                                          (-> state :windows vals)))
+                                          (catch Exception e
+                                            (first (-> state :windows vals))))]
+                     (assoc m
+                            :exp-id (:exp-id next-win)
+                            :rate (or (-> next-win :sc-option :rate) :audio))
+                     m)))))))
+
+(defn- add-digit [n v f]
+  (cond
+    (= v 0) (f 0 (Math/pow 10 (* -1 n)))
+    (number? v) (let [digit (Math/pow 10 (- (int (Math/log10 v)) n))]
+                  (f v (if (>= digit 1) (int digit) digit)))
+    true nil))
+
+(defn calcurate-n-digit [n f]
+  (edit (fn [{:keys [value] :as m}]
+          (let [v (if (string? value) (read-string value) value)]
+            (if-let [v (add-digit n v f)]
+              (assoc m :value (str v)) m)))))
+
+(defn calcurate-value [f]
+  (edit (fn [{:keys [value] :as m}]
+          (let [v (if (string? value) (read-string value) value)]
+            (if (number? v)
+              (assoc m :value (str (f v)))
+              m)))))

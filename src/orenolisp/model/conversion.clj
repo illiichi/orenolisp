@@ -63,6 +63,7 @@
    (convert-node->sexp editor root-id)))
 
 (defn convert-sexp->editor
+  ([sexp] (convert-sexp->editor (ed/new-editor) nil sexp))
   ([editor sexp] (convert-sexp->editor editor nil sexp))
   ([editor parent-id sexp]
    (if-let [[node children] (apply-conversions-sexp->node sexp)]
