@@ -13,8 +13,9 @@
 
 (defn- draw-caret [gc position total-width]
   (when position
-    (let [caret-x (+ LINE-WIDTH (min (- total-width (* 2 LINE-WIDTH))
-                                     (* f/LABEL-FONT-WIDTH position)))]
+    (let [caret-x (+ (* 1/2 LINE-WIDTH)
+                     (min (- total-width (* 2 LINE-WIDTH))
+                          (* f/LABEL-FONT-WIDTH position)))]
       (doto gc
         (.setLineWidth LINE-WIDTH)
         (.fillRect caret-x 6 LINE-WIDTH (+ f/LABEL-FONT-HEIGHT 2))))))
@@ -39,11 +40,13 @@
         (draw-caret (or position 0) 6)))
 
     (let [gc (.getGraphicsContext2D pane)
-          padding-x (+ LINE-WIDTH 1)
+          padding-x (+ LINE-WIDTH -3)
           width (+ padding-x (* f/LABEL-FONT-WIDTH (count value)))
           height (+ 8 f/LABEL-FONT-HEIGHT)]
       (.setWidth pane width)
       (.clearRect gc 0 0 width height)
+      ;; (.setStroke gc Color/WHITE)
+      ;; (.strokeRect gc 0 0 width height)
       (when mark?
         (doto gc
           (.setFill (Color/web "#AAAAFFAA"))
