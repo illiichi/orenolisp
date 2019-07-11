@@ -39,6 +39,7 @@
                         cmd/switch-to-typing-mode]
     {:char "<SPACE>"}  [(cmd/add :left (form/input-ident))
                         cmd/switch-to-typing-mode]
+    {:char "<space>" :specials #{:super}} (cmd/duplicate)
     {:char "<enter>"}  (cmd/with-keep-position #(ed/add % :right (form/new-line)))}))
 
 (def candidate-table
@@ -141,6 +142,10 @@
                       cmd/switch-to-selecting-mode]
     {:char \(}  (cmd/add-with-keep-position :parent (form/paren))
     {:char \}}  (cmd/add-with-keep-position :parent (form/vector))
+    {:char "<space>" :specials #{:super}} [(cmd/edit tx/finish)
+                                           (cmd/duplicate)
+                                           (cmd/edit #(tx/open-editor (:value %)))
+                                           cmd/switch-to-typing-mode]
     {:char "<space>"} [(cmd/edit tx/finish)
                        (cmd/add :right (form/input-ident))]}))
 

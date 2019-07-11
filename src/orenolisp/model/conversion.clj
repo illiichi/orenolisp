@@ -72,5 +72,9 @@
                next-editor children))
      (throw (Exception. (str "no conversion found: " sexp))))))
 
-
-
+(defn sub-editor
+  ([editor] (sub-editor editor (ed/get-id editor :self)))
+  ([editor node-id]
+   (-> editor
+       (convert-node->sexp node-id)
+       convert-sexp->editor)))

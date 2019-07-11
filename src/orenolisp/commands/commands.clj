@@ -108,6 +108,14 @@
               (assoc m :value (str (f v)))
               m)))))
 
+(defn duplicate []
+  (window-command
+   (fn [editor]
+     (let [copied (-> (conv/sub-editor editor)
+                      (ed/move-most :parent))]
+       (-> editor
+           (ed/add-editor :right copied))))))
+
 (defn animate [direction animation-func]
   (fn [state]
     (let [target-id (ed/get-id (st/current-editor state) direction)
