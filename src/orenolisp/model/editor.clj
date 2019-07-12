@@ -29,6 +29,9 @@
        (reductions move editor)
        (map :current-id)))
 
+(defn all-node-ids [{:keys [table]}]
+  (keys table))
+
 (defn- drill-down [tree node-id]
   (let [xs (tr/get-children tree node-id)]
     (if (empty? xs)

@@ -6,6 +6,9 @@
             [orenolisp.commands.commands :as cmd]
             [orenolisp.commands.text-commands :as tx]))
 
+(def clear-keymap
+  {{:char \r} cmd/refresh})
+
 (def initial-keymap
   {{:char "<space>"} [cmd/open-new-window
                       (cmd/add :child (form/input-ident))
@@ -20,11 +23,15 @@
 
 (def global-keymap
   {{:char \l :specials #{:super}} (cmd/set-temporary-keymap "layer"
-                                                             layer-keymap)})
+                                                            layer-keymap)
+   {:char \c :specials #{:ctrl}} (cmd/set-temporary-keymap "clear"
+                                                            clear-keymap)})
 (def node-selecting-keymap
   (merge
    global-keymap
-   {{:char \j} (cmd/move :right)
+   {{:char \j :specials #{:ctrl :alt}} (cmd/move-window ut/find-next)
+    {:char \k :specials #{:ctrl :alt}} (cmd/move-window ut/find-prev)
+    {:char \j} (cmd/move :right)
     {:char \k} (cmd/move :left)
     {:char \l} (cmd/move :parent)
     {:char \[} (cmd/move :parent)
@@ -58,12 +65,18 @@
     (->> (cycle xs) (drop-while #(not= current %)) rest first)
     current))
 
+(def extraction-keymap
+  {{:char \a} (cmd/extract-as-in-ugen :audio)
+   {:char \k} (cmd/extract-as-in-ugen :control)})
+
 (def paren-selecting-keymap
   (merge
    global-keymap
    node-selecting-keymap
    {{:char \a} (cmd/window-command-pure #(ed/move % :child))
     {:char \e} (cmd/window-command-pure #(-> % (ed/move :child) (ed/move-most :right)))
+    {:char \e :specials #{:alt}} (cmd/set-temporary-keymap "extraction"
+                                                            extraction-keymap)
     {:char \n :specials #{:alt}} (cmd/with-keep-position
                                    (fn [editor]
                                      (-> editor

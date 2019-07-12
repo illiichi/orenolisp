@@ -11,5 +11,8 @@
 (defn empty-expression []
   (->Expression (new-exp-id) (ed/new-editor)))
 
+(defn new-expression [editor]
+  (->Expression (new-exp-id) editor))
+
 (defn apply-step-function [^Expression expression step-func]
   (update expression :editor #(or (step-func (ed/copy %)) %)))

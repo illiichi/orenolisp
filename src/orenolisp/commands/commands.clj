@@ -3,17 +3,10 @@
             [orenolisp.state :as st]
             [orenolisp.view.ui.fx-util :as fx]
             [orenolisp.model.editor :as ed]
+            [orenolisp.model.forms :as form]
             [orenolisp.model.conversion :as conv]
             [orenolisp.view.controller.expression-controller :as ec]
             [orenolisp.view.controller.window-controller :as wc]))
-
-(defn open-new-window [state]
-  (let [new-exp (ec/empty-expression)
-        new-win (fx/run-now (wc/open-new-window (:exp-id new-exp)))]
-    (-> state
-        (update :windows #(assoc % (:exp-id new-exp) new-win))
-        (update :expressions #(assoc % (:exp-id new-exp) new-exp))
-        (assoc :current-exp-id (:exp-id new-exp)))))
 
 (defn set-temporary-keymap [description keymap]
   (fn [state] (st/temporary-keymap state description keymap)))
@@ -31,7 +24,8 @@
     (-> state
         (assoc-in [:expressions current-exp-id] new-exp)
         (assoc-in [:windows current-exp-id] new-window)
-        (ut/when-> modified? (assoc-in [:windows current-exp-id :context :modified?] true)))))
+        (ut/when-> modified?
+                   (assoc-in [:windows current-exp-id :context :modified?] true)))))
 
 (defn window-command [f]
   (fn [state] (with-current-window state true f)))
@@ -122,3 +116,40 @@
           ui (st/get-ui state target-id)]
       (.play (animation-func ui)))
     state))
+
+(defn- open-window [state {:keys [exp-id] :as expression} current-layer-no new-layer-no]
+  (let [new-win (fx/run-now (wc/open-new-window exp-id current-layer-no new-layer-no))]
+    (-> state
+        (update :windows #(assoc % exp-id new-win))
+        (update :expressions #(assoc % exp-id expression))
+        (assoc :current-exp-id exp-id))))
+
+(defn open-new-window [state]
+  (open-window state (ec/empty-expression) 0 0))
+
+(defn refresh [{:keys [current-exp-id] :as state}]
+  (update-in state [:windows current-exp-id]
+             #(wc/refresh % (st/current-expression state))))
+
+(defn extract-as-in-ugen [rate]
+  (fn [state]
+    (let [copied-editor (-> (st/current-editor state)
+                            conv/sub-editor (ed/move-most :parent))
+          new-exp (ec/new-expression copied-editor)
+          current-layer-no (-> (st/current-window state)
+                               (get-in [:layout :layer-no]))]
+      (-> (with-current-window state true
+            (fn [editor]
+              (ed/add editor :self (form/in-ugen rate (:exp-id new-exp)))))
+          (open-window new-exp current-layer-no (inc current-layer-no))
+          refresh))))
+
+(defn move-window [find-f]
+  (fn [state]
+    (let [window (st/current-window state)
+          current-layer-no (get-in window [:layout :layer-no])
+          next-id (->> (keys (:windows state))
+                       (find-f (:exp-id window)))]
+      (when next-id
+        (wc/focus (get-in state [:windows next-id]) current-layer-no)
+        (assoc state :current-exp-id next-id)))))

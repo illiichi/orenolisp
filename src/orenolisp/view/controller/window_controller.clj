@@ -39,12 +39,12 @@
 (defn focus [{:keys [layout win-ui]} current-layer-no]
   (viewport/focus current-layer-no (:layer-no layout) win-ui))
 
-(defn open-new-window [exp-id]
+(defn open-new-window [exp-id current-layer-no new-layer-no]
   (let [[x y outer-width outer-height] (apply viewport/location-by-ratio (pop-location))
         [sx sy] (wu/inner-pos x y)
         [inner-width inner-height] (wu/inner-size outer-width outer-height)
-        window (new-window exp-id 0 sx sy inner-width inner-height)]
-    (focus window 0)
+        window (new-window exp-id new-layer-no sx sy inner-width inner-height)]
+    (focus window current-layer-no)
     window))
 
 (defn- create-and-delete-ui [editor layer-no exp-table created-ids deleted-ids]
@@ -95,3 +95,11 @@
     (-> window
         (assoc :exp-table new-exp-table)
         (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))
+
+(defn- delete-forms [{:keys [exp-table]} ids]
+  (->> ids (keep exp-table) (map :component) viewport/remove-components))
+
+(defn refresh [window {:keys [editor]}]
+  (let [ids (ed/all-node-ids editor)]
+    (delete-forms window ids)
+    (update-window window (ed/new-editor) editor)))
