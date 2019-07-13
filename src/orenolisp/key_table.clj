@@ -71,7 +71,13 @@
   {{:char \a} (cmd/extract-as-in-ugen :audio)
    {:char \k} (cmd/extract-as-in-ugen :control)})
 (def transformation-keymap
-  {{:char \m} (cmd/window-command trans/wrap-by-map)})
+  {{:char \m} (cmd/window-command trans/wrap-by-map)
+   {:char \r} (cmd/window-command trans/wrap-by-reduce)
+   {:char \t} (cmd/window-command trans/threading)})
+
+(def transformation-ident-keymap
+  {{:char \r} (cmd/window-command trans/wrap-by-range)
+   {:char \l} (cmd/window-command trans/wrap-by-line)})
 
 (def paren-selecting-keymap
   (merge
@@ -98,6 +104,8 @@
    node-selecting-keymap
    {{:char \i} [(cmd/edit #(tx/open-editor (:value %)))
                 cmd/switch-to-typing-mode]
+    {:char \t :specials #{:alt}} (cmd/set-temporary-keymap "transformation"
+                                                           transformation-ident-keymap)
     {:char \n :specials #{:alt}} (cmd/edit #(update % :value next-candidate))
     {:char \d} (cmd/calcurate-value (partial * 2))
     {:char \c} (cmd/calcurate-value (partial * 1/2))
