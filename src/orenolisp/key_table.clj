@@ -4,7 +4,8 @@
             [orenolisp.model.editor :as ed]
             [orenolisp.view.ui.component.animations :as anim]
             [orenolisp.commands.commands :as cmd]
-            [orenolisp.commands.text-commands :as tx]))
+            [orenolisp.commands.text-commands :as tx]
+            [orenolisp.commands.transforms :as trans]))
 
 (def clear-keymap
   {{:char \r} cmd/refresh})
@@ -69,6 +70,8 @@
 (def extraction-keymap
   {{:char \a} (cmd/extract-as-in-ugen :audio)
    {:char \k} (cmd/extract-as-in-ugen :control)})
+(def transformation-keymap
+  {{:char \m} (cmd/window-command trans/wrap-by-map)})
 
 (def paren-selecting-keymap
   (merge
@@ -77,7 +80,9 @@
    {{:char \a} (cmd/window-command-pure #(ed/move % :child))
     {:char \e} (cmd/window-command-pure #(-> % (ed/move :child) (ed/move-most :right)))
     {:char \e :specials #{:alt}} (cmd/set-temporary-keymap "extraction"
-                                                            extraction-keymap)
+                                                           extraction-keymap)
+    {:char \t :specials #{:alt}} (cmd/set-temporary-keymap "transformation"
+                                                           transformation-keymap)
     {:char \n :specials #{:alt}} (cmd/with-keep-position
                                    (fn [editor]
                                      (-> editor
