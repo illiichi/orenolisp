@@ -37,6 +37,7 @@
     {:char \[} (cmd/move :parent)
     {:char \a :specials #{:ctrl :alt}} (cmd/move-most :parent)
     {:char \d :specials #{:ctrl}} (cmd/delete)
+    {:char "<space>" :specials #{:ctrl}} (cmd/window-command-pure ed/toggle-mark)
     {:char \r} (cmd/raise)
     {:char \}}         [(cmd/with-keep-position #(ed/add % :parent (form/vector)))
                         (cmd/animate :parent anim/zoom-in)]

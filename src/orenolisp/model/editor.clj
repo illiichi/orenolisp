@@ -6,10 +6,10 @@
            [java.util ArrayList]))
 
 (defrecord Node [content attributes])
-(defrecord Editor [current-id tree table])
+(defrecord Editor [current-id tree table marks])
 
 (defn new-editor []
-  (->Editor nil (tr/new-tree) {}))
+  (->Editor nil (tr/new-tree) {} []))
 
 (defn get-id [{:keys [current-id tree]} direction]
   (case direction
@@ -114,6 +114,22 @@
 (defn edit [{:keys [current-id] :as editor} f]
   (update editor :table update-in [current-id :content] f))
 
+(defn focus? [{:keys [current-id]} target-id] (= target-id current-id))
+(defn get-marks [{:keys [marks]}] marks)
+(defn marked? [{:keys [marks]} target-id] (some #(= target-id %) marks))
+(defn mark
+  ([{:keys [current-id] :as editor}] (mark editor current-id))
+  ([editor target-id] (update editor :marks #(cons target-id %) )))
+(defn clear-mark [editor]
+  (assoc editor :marks []))
+(defn- try-unmark [{:keys [current-id] :as editor}]
+  (when (marked? editor current-id)
+    (update editor :marks (partial remove #(= current-id %)))))
+(defn toggle-mark [editor]
+  (or (try-unmark editor) (mark editor)))
+(defn with-marks [editor f]
+  (some->> (get-marks editor) (f editor) (clear-mark)))
+
 (defn delete [{:keys [current-id tree] :as editor}]
   (if (root? editor)
     (new-editor)
@@ -153,7 +169,10 @@
   (.add ids node-id)
   (assert (apply distinct? ids) (str "duplicated id found:" node-id))
   (when printer
-    (println (format "%04d%s:" node-id (if (= node-id current-id) "*" " ")) indent
+    (println (format "%04d%s:" node-id (cond
+                                         (focus? editor node-id) "*"
+                                         (marked? editor node-id) "+"
+                                         true " ")) indent
              (printer node-id (get-content editor node-id))))
   (doseq [c (tr/get-children tree node-id)]
     (check-tree (-> option (assoc :parent node-id))
