@@ -140,19 +140,32 @@
     :self (replace-tree tree target-id new-tree)
     (add-tree tree target-id direction new-tree)))
 
-(defn- add-parent [{:keys [parent-table children-table] :as tree} target-id new-id]
-  (when (not (root-node? tree target-id))
-    (ut/replace-element (get-siblings tree target-id) target-id new-id))
-  (.put parent-table new-id (.get parent-table target-id))
-  (.put children-table new-id (doto (new-node) (.add target-id)))
-  (.put parent-table target-id new-id)
-  #{})
+(defn has? [{:keys [children-table]} node-id]
+  (ut/has-key? children-table node-id))
+
+(defn add-parent [{:keys [parent-table children-table] :as tree} target-id
+                  sub-tree attach-id]
+  (assert (has? tree target-id) (str "target-id not found:" target-id
+                                     " from " (keys (:parent-table tree))
+                                     " or " (keys (:children-table tree))))
+  (assert (has? sub-tree attach-id))
+  (assert-independent? tree sub-tree)
+  (let [parent-id (get-parent tree target-id)
+        root-of-sub-tree (find-root sub-tree)]
+    (ut/merge-hashmap children-table (:children-table sub-tree))
+    (ut/merge-hashmap parent-table (:parent-table sub-tree))
+    (when (not (root-node? tree target-id))
+      (ut/replace-element (get-children tree parent-id) target-id root-of-sub-tree))
+    (.put parent-table root-of-sub-tree parent-id)
+    (.add (get-children tree attach-id) target-id)
+    (.put parent-table target-id attach-id)
+    #{}))
 
 (defn add-node
   [{:keys [parent-table children-table] :as tree}
    target-id direction new-id]
   (case direction
-    :parent (add-parent tree target-id new-id)
+    :parent (add-parent tree target-id (single-element-tree new-id) new-id)
     (add tree target-id direction (single-element-tree new-id))))
 
 (defn delete
@@ -174,14 +187,29 @@
     (delete tree source-id)
     (add tree target-id direction sub-tree)))
 
+(defn- replace-node [{:keys [parent-table children-table] :as tree}
+                     parent-id target-id new-id]
+  (when parent-id
+    (ut/replace-element (get-children tree parent-id) target-id new-id))
+  (.put parent-table new-id parent-id))
+
+(defn swap [tree source-id target-id]
+  (if (= (get-parent tree source-id) (get-parent tree target-id))
+    (ut/swap-element (get-siblings tree source-id) source-id target-id)
+    (let [parent-src (get-parent tree source-id)
+          parent-tar (get-parent tree target-id)]
+      (replace-node tree parent-src source-id target-id)
+      (replace-node tree parent-tar target-id source-id)))
+  #{})
+
 (defn pre-walk [{:keys [parent-table children-table] :as tree} acc f]
   (loop [acc acc
          [x & xs] []
          children-stack [(get-children tree (find-root tree))]]
-      (if x
-        (recur (f acc x) xs (cons (get-children tree x) children-stack))
-        (if (empty? children-stack)
-          acc
-          (recur acc (first children-stack) (rest children-stack))))))
+    (if x
+      (recur (f acc x) xs (cons (get-children tree x) children-stack))
+      (if (empty? children-stack)
+        acc
+        (recur acc (first children-stack) (rest children-stack))))))
 
 

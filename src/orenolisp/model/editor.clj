@@ -13,6 +13,7 @@
 
 (defn get-id [{:keys [current-id tree]} direction]
   (case direction
+    :root (tr/find-root tree)
     :parent (tr/get-parent tree current-id)
     :child (first (tr/get-children tree current-id))
     :left (ut/find-prev current-id (tr/get-siblings tree current-id))
@@ -95,13 +96,20 @@
    (add-editor editor current-id direction editor2))
   ([{:keys [tree] :as editor} target-id direction editor2]
    (-> editor
-       (apply-tree-operation #(tr/add tree target-id direction (:tree editor2)))
+       (apply-tree-operation
+        (if (= direction :parent)
+          #(tr/add-parent tree target-id (:tree editor2) (get-id editor2 :self))
+          #(tr/add tree target-id direction (:tree editor2))))
        (assoc :current-id (get-id editor2 :self))
        (update :table merge (:table editor2)))))
 
 (defn transport [{:keys [current-id tree] :as editor} direction target-id]
   (-> editor
       (apply-tree-operation #(tr/transport tree current-id target-id direction))))
+
+(defn swap [{:keys [current-id tree] :as editor} target-id]
+  (-> editor
+      (apply-tree-operation #(tr/swap tree current-id target-id))))
 
 (defn edit [{:keys [current-id] :as editor} f]
   (update editor :table update-in [current-id :content] f))
@@ -139,8 +147,9 @@
   (when (not= parent :root)
     (assert (tr/get-parent tree node-id) (str "no parent found: " node-id))
     (assert (= (tr/get-parent tree node-id) parent)
-            (str "different parent:"
-                 (tr/get-parent tree node-id) " and " parent)))
+            (str "different parent for:" node-id
+                 " from parent-table:" (tr/get-parent tree node-id)
+                 " from children-table: " parent)))
   (.add ids node-id)
   (assert (apply distinct? ids) (str "duplicated id found:" node-id))
   (when printer

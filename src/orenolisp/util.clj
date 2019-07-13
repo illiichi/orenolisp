@@ -16,6 +16,9 @@
 (defmacro when-> [x cond body]
   `(if ~cond (-> ~x ~body) ~x))
 
+(defn has-key? [m k]
+  (boolean ((set (keys m)) k)))
+
 (defn map-kv [f m]
   (reduce-kv (fn [acc k v] (assoc acc k (f k v)))
              {} m))
@@ -62,9 +65,17 @@
             (str "contains duplicated key: " (keys ys))))
   xs)
 
-
 (defn replace-element [^ArrayList arr-list old new]
   (let [idx (or (.indexOf arr-list old)
                 (throw (Exception. (str "element not found: " old))))]
     (.set arr-list idx new)
+    arr-list))
+
+(defn swap-element [^ArrayList arr-list x y]
+  (let [idx-x (or (.indexOf arr-list x)
+                  (throw (Exception. (str "element not found: " x))))
+        idx-y (or (.indexOf arr-list y)
+                  (throw (Exception. (str "element not found: " y))))]
+    (.set arr-list idx-x y)
+    (.set arr-list idx-y x)
     arr-list))

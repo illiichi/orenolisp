@@ -45,12 +45,28 @@
                     (ed/move :parent)
                     (ed/move :parent)
                     (ed/add :child "d")
-                    (ed/add :left "e"))]
+                    (ed/add :left "e"))
+        editor3 (-> (ed/new-editor)
+                    (ed/add :child "a"))]
     (is (-> (ed/copy editor)
-            (ed/add-editor :child editor2)
+            (ed/add-editor :child (ed/copy editor2))
             ed/print-editor))
-    (is (-> editor
+    (is (-> (ed/copy editor)
             (ed/add-editor :self editor2)
+            ed/print-editor))
+    (is (-> (ed/copy editor)
+            (ed/add-editor :parent (ed/copy editor2))
+            ed/print-editor))
+    (is (-> (ed/copy editor)
+            (ed/move :parent)
+            (ed/add-editor :parent (ed/copy editor2))
+            ed/print-editor))
+    (is (-> (ed/copy editor)
+            (ed/add-editor :parent (ed/copy editor3))
+            ed/print-editor))
+    (is (-> (ed/copy editor)
+            (ed/move :parent)
+            (ed/add-editor :parent (ed/copy editor3))
             ed/print-editor))))
 
 (deftest get-ids-test
@@ -123,17 +139,37 @@
           ed/print-editor))))
 
 (deftest raise-test
-  (is (let [editor (ed/new-editor)
-            editor (-> editor
+  (is (let [editor (-> (ed/new-editor)
                        (ed/add :child 1)
                        (ed/add :child 2)
                        (ed/add :child 3)
                        (ed/add :left 4)
                        (ed/add :left 5)
-                       (ed/add :child 6))
+                       (ed/add :child 6)
+                       (ed/move :parent))
             parent-id (ed/get-id editor :parent)]
         (-> editor
             (ed/transport :self parent-id)
+            ed/print-editor))))
+
+(deftest swap-test
+  (let [editor (-> (ed/new-editor)
+                   (ed/add :child 1)
+                   (ed/add :child 2)
+                   (ed/add :child 3)
+                   (ed/add :left 4)
+                   (ed/add :child 7)
+                   (ed/move :parent)
+                   (ed/add :left 5)
+                   (ed/add :child 6)
+                   (ed/move :parent))
+        [_ id1 id2] (ed/get-ids editor [:right :child])]
+    (ed/print-editor editor)
+    (is (-> (ed/copy editor)
+            (ed/swap id1)
+            ed/print-editor))
+    (is (-> (ed/copy editor)
+            (ed/swap id2)
             ed/print-editor))))
 
 (deftest diff-test
