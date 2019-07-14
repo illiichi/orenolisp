@@ -14,6 +14,8 @@
 (defrecord Layout [position size layer-no])
 (defrecord Window [exp-id layout win-ui exp-table context])
 
+(defn get-frame-ui [{:keys [win-ui]}] win-ui)
+
 (defn- put-into-viewport [{:keys [win-ui layout]}]
   (viewport/put-component (:layer-no layout) win-ui))
 

@@ -23,10 +23,12 @@
                cmd/switch-to-typing-mode]})
 
 (def global-keymap
-  {{:char \l :specials #{:super}} (cmd/set-temporary-keymap "layer"
+  {{:char \h :specials #{:alt}} cmd/evaluate
+   {:char \h :specials #{:alt :ctrl}} cmd/evaluate-all-modified
+   {:char \l :specials #{:super}} (cmd/set-temporary-keymap "layer"
                                                             layer-keymap)
    {:char \c :specials #{:ctrl}} (cmd/set-temporary-keymap "clear"
-                                                            clear-keymap)})
+                                                           clear-keymap)})
 (def node-selecting-keymap
   (merge
    global-keymap

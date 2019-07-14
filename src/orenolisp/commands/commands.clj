@@ -6,7 +6,10 @@
             [orenolisp.model.forms :as form]
             [orenolisp.model.conversion :as conv]
             [orenolisp.view.controller.expression-controller :as ec]
-            [orenolisp.view.controller.window-controller :as wc]))
+            [orenolisp.view.controller.window-controller :as wc]
+            [orenolisp.sc.eval :as sc]
+            [orenolisp.sc.builder :as sb]
+            [orenolisp.view.ui.component.animations :as anim]))
 
 (defn set-temporary-keymap [description keymap]
   (fn [state] (st/temporary-keymap state description keymap)))
@@ -125,23 +128,30 @@
         (assoc :current-exp-id exp-id))))
 
 (defn open-new-window [state]
-  (open-window state (ec/empty-expression) 0 0))
+  (let [new-exp (ec/empty-expression)]
+    (sc/set-volume new-exp 1)
+    (open-window state new-exp 0 0)))
 
 (defn refresh [{:keys [current-exp-id] :as state}]
   (update-in state [:windows current-exp-id]
              #(wc/refresh % (st/current-expression state))))
 
+(defn- create-sc-option [rate layer-no]
+  {:rate rate :layer-no layer-no})
+
 (defn extract-as-in-ugen [rate]
   (fn [state]
     (let [copied-editor (-> (st/current-editor state)
                             conv/sub-editor (ed/move-most :parent))
-          new-exp (ec/new-expression copied-editor)
           current-layer-no (-> (st/current-window state)
-                               (get-in [:layout :layer-no]))]
+                               (get-in [:layout :layer-no]))
+          next-layer-no (inc current-layer-no)
+          new-exp (ec/new-expression copied-editor (create-sc-option rate next-layer-no))]
+      (sc/set-volume new-exp 1)
       (-> (with-current-window state true
             (fn [editor]
               (ed/add editor :self (form/in-ugen rate (:exp-id new-exp)))))
-          (open-window new-exp current-layer-no (inc current-layer-no))
+          (open-window new-exp current-layer-no next-layer-no)
           refresh))))
 
 (defn move-window [find-f]
@@ -153,3 +163,32 @@
       (when next-id
         (wc/focus (get-in state [:windows next-id]) current-layer-no)
         (assoc state :current-exp-id next-id)))))
+
+(defmacro no-exception? [& body]
+  `(try ~@body
+       true
+       (catch Throwable e#
+         (println "error: " (or (.getMessage e#) e#)
+                  "(" (some-> e# (.getCause) (.getMessage)) ")")
+         false)))
+
+(defn- evaluate-exp [state exp-id]
+  (let [window (get-in state [:windows exp-id])
+        ui (wc/get-frame-ui window)
+        expression (get-in state [:expressions exp-id])
+        result (no-exception? (-> expression sb/exp->sexp sc/doit))]
+    (.play (anim/flash ui result))
+    (if result
+      (assoc-in state [:windows exp-id :context :modified?] false)
+      state)))
+
+(defn evaluate [state]
+  (->> (:current-exp-id state)
+       (evaluate-exp state)))
+
+(defn evaluate-all-modified [state]
+  (let [modified-exp-ids (->> (:windows state)
+                              vals
+                              (filter #(get-in % [:context :modified?]))
+                              (map :exp-id))]
+    (reduce evaluate-exp state modified-exp-ids)))
