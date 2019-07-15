@@ -40,14 +40,14 @@
 
 (def MAX-WIDTH (- 1280 (* 2 PADDING)))
 
-(defn inner-pos [x y]
-  [(+ x PADDING) (+ y TOP-PADDING)])
+(defn inner-pos [{:keys [x y]}]
+  {:x (+ x PADDING) :y (+ y TOP-PADDING)})
 (defn outer-pos [pos]
   (-> pos
       (update :x #(- % PADDING))
       (update :y #(- % TOP-PADDING))))
-(defn inner-size [w h]
-  [(- w (* 2 PADDING)) (- h TOP-PADDING PADDING)])
+(defn inner-size [{:keys [w h]}]
+  {:w (- w (* 2 PADDING)) :h (- h TOP-PADDING PADDING)})
 (defn outer-size [w h]
   [(+ (* 2 PADDING) w) (+ TOP-PADDING PADDING h)])
 

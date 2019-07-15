@@ -75,6 +75,11 @@
   (doseq [component components]
     (fx/remove-node component (anim/dissapear component))))
 
+(defn remove-components-quick [container components]
+  (let [children (.getChildren container)]
+    (doseq [component components]
+      (.remove children component))))
+
 (defn focus [current-layer-no new-layer-no component]
   (let [[h v] (calcurate-scroll-position-to-focus component)]
     (move-animation current-layer-no new-layer-no h v)))

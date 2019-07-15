@@ -7,6 +7,7 @@
             [orenolisp.model.conversion :as conv]
             [orenolisp.view.controller.expression-controller :as ec]
             [orenolisp.view.controller.window-controller :as wc]
+            [orenolisp.view.ui.component.viewport :as viewport]
             [orenolisp.sc.eval :as sc]
             [orenolisp.sc.builder :as sb]
             [orenolisp.view.ui.component.animations :as anim]))
@@ -120,17 +121,24 @@
       (.play (animation-func ui)))
     state))
 
-(defn- open-window [state {:keys [exp-id] :as expression} current-layer-no new-layer-no]
-  (let [new-win (fx/run-now (wc/open-new-window exp-id current-layer-no new-layer-no))]
+(defn- open-window [state {:keys [exp-id] :as expression} current-layer-no new-layout]
+  (let [new-win (fx/run-now (wc/open-new-window exp-id current-layer-no new-layout))]
     (-> state
         (update :windows #(assoc % exp-id new-win))
         (update :expressions #(assoc % exp-id expression))
         (assoc :current-exp-id exp-id))))
 
+(def prepared-locations (atom (cycle [[0.55 0.8 0.5 0.5]
+                                      [0.55 0.8 0.825 0.5]
+                                      [0.55 0.8 0.175 0.5]])))
+(defn- pop-location []
+  (let [args (apply viewport/location-by-ratio (first (swap! prepared-locations rest)))]
+    (apply wc/->layout 0 args)))
+
 (defn open-new-window [state]
   (let [new-exp (ec/empty-expression)]
     (sc/set-volume new-exp 1)
-    (open-window state new-exp 0 0)))
+    (open-window state new-exp 0 (pop-location))))
 
 (defn refresh [{:keys [current-exp-id] :as state}]
   (update-in state [:windows current-exp-id]
@@ -151,7 +159,8 @@
       (-> (with-current-window state true
             (fn [editor]
               (ed/add editor :self (form/in-ugen rate (:exp-id new-exp)))))
-          (open-window new-exp current-layer-no next-layer-no)
+          (open-window new-exp current-layer-no (-> (pop-location)
+                                                    (assoc :layer-no next-layer-no)))
           refresh))))
 
 (defn move-window [find-f]

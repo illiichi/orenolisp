@@ -12,6 +12,8 @@
 (defrecord Size [w h])
 (defrecord Position [x y])
 (defrecord Layout [position size layer-no])
+(defn ->layout [layer-no x y w h]
+  (->Layout (->Position x y) (->Size w h) layer-no))
 (defrecord Window [exp-id layout win-ui exp-table context])
 
 (defn get-frame-ui [{:keys [win-ui]}] win-ui)
@@ -23,29 +25,22 @@
   (fx/move win-ui (wu/outer-pos (:position layout)))
   (wu/draw-with-inner-size win-ui exp-id (:size layout)))
 
-(defn new-window [exp-id layer-no x y inner-width inner-height]
-  (doto (->Window exp-id (->Layout (->Position x y)
-                                   (->Size inner-width inner-height)
-                                   layer-no)
+(defn new-window [exp-id inner-layout]
+  (doto (->Window exp-id inner-layout
                   (wu/create) {} {:doing :selecting})
     (put-into-viewport)
     (draw-frame)))
 
-(def prepared-locations (atom (cycle [[0.55 0.8 0.5 0.5]
-                                      [0.55 0.8 0.825 0.5]
-                                      [0.55 0.8 0.175 0.5]])))
-
-(defn pop-location []
-  (first (swap! prepared-locations rest)))
-
 (defn focus [{:keys [layout win-ui]} current-layer-no]
   (viewport/focus current-layer-no (:layer-no layout) win-ui))
 
-(defn open-new-window [exp-id current-layer-no new-layer-no]
-  (let [[x y outer-width outer-height] (apply viewport/location-by-ratio (pop-location))
-        [sx sy] (wu/inner-pos x y)
-        [inner-width inner-height] (wu/inner-size outer-width outer-height)
-        window (new-window exp-id new-layer-no sx sy inner-width inner-height)]
+(defn- convert-to-inner-layout [layout]
+  (-> layout
+      (update :position wu/inner-pos)
+      (update :size wu/inner-size)))
+
+(defn open-new-window [exp-id current-layer-no new-layout]
+  (let [window (new-window exp-id (convert-to-inner-layout new-layout))]
     (focus window current-layer-no)
     window))
 
@@ -100,7 +95,10 @@
         (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))
 
 (defn- delete-forms [{:keys [exp-table]} ids]
-  (->> ids (keep exp-table) (map :component) viewport/remove-components))
+  (let [components (->> ids (keep exp-table) (map :component))]
+    (when-let [c (first components)]
+      (fx/run-now
+       (viewport/remove-components-quick (.getParent c) components)))))
 
 (defn refresh [window {:keys [editor]}]
   (let [ids (ed/all-node-ids editor)]
