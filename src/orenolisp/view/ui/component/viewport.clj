@@ -22,8 +22,8 @@
 
 (def distance-to-screen 1)
 (def distance-between-screen 1)
-(def total-sec 400)
-(def time-division 10)
+(def total-sec 200)
+(def time-division 5)
 
 (defn- calcurate-scale [z]
   (let [dz 0.2]
@@ -76,9 +76,11 @@
     (fx/remove-node component (anim/dissapear component))))
 
 (defn remove-components-quick [container components]
-  (let [children (.getChildren container)]
-    (doseq [component components]
-      (.remove children component))))
+  (let [comps (set components)
+        it (.iterator (.getChildren container))]
+    (while (.hasNext it)
+      (when (comps (.next it))
+        (.remove it)))))
 
 (defn focus [current-layer-no new-layer-no component]
   (let [[h v] (calcurate-scroll-position-to-focus component)]

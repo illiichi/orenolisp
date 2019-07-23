@@ -121,8 +121,11 @@
       (.play (animation-func ui)))
     state))
 
-(defn- open-window [state {:keys [exp-id] :as expression} current-layer-no new-layout]
-  (let [new-win (fx/run-now (wc/open-new-window exp-id current-layer-no new-layout))]
+(defn- open-window [state {:keys [exp-id] :as expression} new-layout]
+  (let [current-layer-no (or (some-> (st/current-window state)
+                                     (get-in [:layout :layer-no]))
+                             0)
+        new-win (fx/run-now (wc/open-new-window exp-id current-layer-no new-layout))]
     (-> state
         (update :windows #(assoc % exp-id new-win))
         (update :expressions #(assoc % exp-id expression))
@@ -133,12 +136,13 @@
                                       [0.55 0.8 0.175 0.5]])))
 (defn- pop-location []
   (let [args (apply viewport/location-by-ratio (first (swap! prepared-locations rest)))]
-    (apply wc/->layout 0 args)))
+    (-> (apply wc/->layout 0 args)
+        wc/convert-to-inner-layout)))
 
 (defn open-new-window [state]
   (let [new-exp (ec/empty-expression)]
     (sc/set-volume new-exp 1)
-    (open-window state new-exp 0 (pop-location))))
+    (open-window state new-exp (pop-location))))
 
 (defn refresh [{:keys [current-exp-id] :as state}]
   (update-in state [:windows current-exp-id]
@@ -147,6 +151,13 @@
 (defn- create-sc-option [rate layer-no]
   {:rate rate :layer-no layer-no})
 
+(defn create-new-layout [current-ui next-layer-no]
+  (let [position (wc/->Position (.getLayoutX current-ui)
+                                (.getLayoutY current-ui))
+        size (wc/->Size (.getWidth current-ui)
+                        (.getHeight current-ui))]
+    (wc/->Layout position size next-layer-no)))
+
 (defn extract-as-in-ugen [rate]
   (fn [state]
     (let [copied-editor (-> (st/current-editor state)
@@ -154,13 +165,13 @@
           current-layer-no (-> (st/current-window state)
                                (get-in [:layout :layer-no]))
           next-layer-no (inc current-layer-no)
-          new-exp (ec/new-expression copied-editor (create-sc-option rate next-layer-no))]
+          new-exp (ec/new-expression copied-editor (create-sc-option rate next-layer-no))
+          new-layout (create-new-layout (st/current-ui state) next-layer-no)]
       (sc/set-volume new-exp 1)
       (-> (with-current-window state true
             (fn [editor]
               (ed/add editor :self (form/in-ugen rate (:exp-id new-exp)))))
-          (open-window new-exp current-layer-no (-> (pop-location)
-                                                    (assoc :layer-no next-layer-no)))
+          (open-window new-exp new-layout)
           refresh))))
 
 (defn move-window [find-f]
@@ -201,3 +212,14 @@
                               (filter #(get-in % [:context :modified?]))
                               (map :exp-id))]
     (reduce evaluate-exp state modified-exp-ids)))
+
+(defn widen-window [dw]
+  (fn [state]
+    (update-in state [:windows (:current-exp-id state)]
+               (fn [w]
+                 (let [new-width (+ dw (get-in w [:layout :size :w]))]
+                   (wc/layout (st/current-editor state) w new-width))))))
+
+(defn open-window-from-in-ugen [state]
+  (when-let [next-exp-id (:exp-id (st/current-content state))]
+    ((move-window (fn [_ _] next-exp-id)) state)))

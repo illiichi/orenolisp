@@ -3,6 +3,7 @@
             [orenolisp.view.ui.component.viewport :as viewport]
             [orenolisp.view.layout.layout :as layout]
             [orenolisp.view.layout.layout-decision :as layout-decision]
+            [orenolisp.view.ui.component.animations :as anim]
             [orenolisp.model.editor :as ed]
             [orenolisp.util :as ut]
             [orenolisp.view.ui.expression-ui :as eu]
@@ -19,11 +20,16 @@
 (defn get-frame-ui [{:keys [win-ui]}] win-ui)
 
 (defn- put-into-viewport [{:keys [win-ui layout]}]
+  (.play (anim/white-in 150 win-ui))
   (viewport/put-component (:layer-no layout) win-ui))
 
 (defn- draw-frame [{:keys [win-ui exp-id layout]}]
   (fx/move win-ui (wu/outer-pos (:position layout)))
   (wu/draw-with-inner-size win-ui exp-id (:size layout)))
+
+(defn update-window-size [window new-size]
+  (doto (assoc-in window [:layout :size] new-size)
+    (draw-frame)))
 
 (defn new-window [exp-id inner-layout]
   (doto (->Window exp-id inner-layout
@@ -34,13 +40,13 @@
 (defn focus [{:keys [layout win-ui]} current-layer-no]
   (viewport/focus current-layer-no (:layer-no layout) win-ui))
 
-(defn- convert-to-inner-layout [layout]
+(defn convert-to-inner-layout [layout]
   (-> layout
       (update :position wu/inner-pos)
       (update :size wu/inner-size)))
 
 (defn open-new-window [exp-id current-layer-no new-layout]
-  (let [window (new-window exp-id (convert-to-inner-layout new-layout))]
+  (let [window (new-window exp-id new-layout)]
     (focus window current-layer-no)
     window))
 
@@ -77,8 +83,26 @@
       (eu/render-form node-id result editor bounds))
     result))
 
+(defn layout [editor window width]
+  (let [org-height (get-in window [:layout :size :h])
+        exp-table   (get-in window [:exp-table])
+        layout-option (-> (get-in window [:layout :position])
+                          (assoc :w width))
+        new-bounds (layout/calcurate-layout layout-decision/build-size-or-option
+                                            layout-option editor)
+        new-exp-table (ut/map-kv (partial update-node editor new-bounds
+                                          #{}) exp-table)
+        root-id (ed/get-id editor :root)
+        inner-size (-> (:size (get new-bounds root-id))
+                       (update :w #(max % width))
+                       (update :h #(max % org-height)))]
+    (-> window
+        (update-window-size inner-size)
+        (assoc :exp-table new-exp-table))))
+
 (defn update-window [window prev-editor new-editor]
   (let [max-width (get-in window [:layout :size :w])
+        org-height (get-in window [:layout :size :h])
         layer-no (get-in window [:layout :layer-no])
         exp-table   (get-in window [:exp-table])
         layout-option (-> (get-in window [:layout :position])
@@ -88,9 +112,13 @@
         {:keys [created modified deleted]} (ed/diff prev-editor new-editor)
         exp-table (create-and-delete-ui new-editor layer-no exp-table created deleted)
         new-exp-table (ut/map-kv (partial update-node new-editor new-bounds
-                                          (union created modified)) exp-table)]
-    ;; change window height
+                                          (union created modified)) exp-table)
+        root-id (ed/get-id new-editor :root)
+        inner-size (-> (:size (get new-bounds root-id))
+                       (update :w #(max % max-width))
+                       (update :h #(max % org-height)))]
     (-> window
+        (update-window-size inner-size)
         (assoc :exp-table new-exp-table)
         (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))
 

@@ -1,4 +1,5 @@
-(ns orenolisp.state)
+(ns orenolisp.state
+  (:require [orenolisp.model.editor :as ed]))
 
 (defn ->State [current-exp-id windows expressions]
   {:current-exp-id current-exp-id
@@ -17,6 +18,9 @@
 
 (defn current-editor [{:keys [current-exp-id expressions]}]
   (get-in expressions [current-exp-id :editor]))
+
+(defn current-content [state]
+  (ed/get-content (current-editor state)))
 
 (defn current-node-id [state]
   (:current-id (current-editor state)))

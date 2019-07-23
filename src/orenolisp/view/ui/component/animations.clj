@@ -96,26 +96,32 @@
     [(blend effects) [(apply fx/->KeyFrame 0 frame-0)
                       (apply fx/->KeyFrame 100 frame-1)
                       (apply fx/->KeyFrame 150 frame-2)]]))
-(defn white-in [ui]
-  (let [opacity-p (.opacityProperty ui)
-        color (ColorAdjust.)
-        brigt-p (.brightnessProperty color)
-        [effect key-frames] (shadow-and-keyframes)]
-    (.setEffect ui effect)
-    (.setScaleX ui 1)
-    (.setScaleY ui 1)
-    (doto (fx/create-animation (concat key-frames
-                                       [(fx/->KeyFrame 0 [opacity-p 0]
-                                                       [brigt-p 1])
-                                        (fx/->KeyFrame 30
-                                                       [opacity-p 1])
-                                        (fx/->KeyFrame 100
-                                                       [brigt-p 0.8]
-                                                       [opacity-p 1])
-                                        ;; (fx/->KeyFrame 150 [opacity-p 0.3])
-                                        (fx/->KeyFrame 220 [brigt-p 0])]))
-      (fx/on-animation-finished (fn [_]
-                                  (.setEffect ui nil))))))
+
+(defn- make-delay [delay-s key-frames]
+  (map (fn [[x xs]] [(if (= x 0) x (+ x delay-s)) xs]) key-frames))
+
+(defn white-in
+  ([delay-s ui]
+   (let [opacity-p (.opacityProperty ui)
+         color (ColorAdjust.)
+         brigt-p (.brightnessProperty color)
+         [effect key-frames] (shadow-and-keyframes)]
+     (.setEffect ui effect)
+     (.setScaleX ui 1)
+     (.setScaleY ui 1)
+     (doto (fx/create-animation (->> (concat key-frames
+                                             [(fx/->KeyFrame 0 [opacity-p 0]
+                                                             [brigt-p 1])
+                                              (fx/->KeyFrame 30
+                                                             [opacity-p 1])
+                                              (fx/->KeyFrame 100
+                                                             [brigt-p 0.8]
+                                                             [opacity-p 1])
+                                              ;; (fx/->KeyFrame 150 [opacity-p 0.3])
+                                              (fx/->KeyFrame 220 [brigt-p 0])])
+                                     (make-delay delay-s)))
+       (fx/on-animation-finished (fn [_]
+                                   (.setEffect ui nil)))))))
 
 (defn white-out [ui]
   (let [opacity-p (.opacityProperty ui)

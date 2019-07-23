@@ -5,7 +5,7 @@
            (javafx.scene.canvas Canvas)
            [javafx.scene.effect ColorAdjust Glow]))
 
-(def ^:const LINE-WIDTH 4)
+(def ^:const LINE-WIDTH 2)
 
 (defn create-node []
   (doto (Canvas.)
@@ -13,12 +13,11 @@
 
 (defn- draw-caret [gc position total-width]
   (when position
-    (let [caret-x (+ (* 1/2 LINE-WIDTH)
-                     (min (- total-width (* 2 LINE-WIDTH))
-                          (* f/LABEL-FONT-WIDTH position)))]
+    (let [caret-x (min total-width
+                       (* f/LABEL-FONT-WIDTH position))]
       (doto gc
         (.setLineWidth LINE-WIDTH)
-        (.fillRect caret-x 6 LINE-WIDTH (+ f/LABEL-FONT-HEIGHT 2))))))
+        (.strokeLine caret-x 6 caret-x (+ f/LABEL-FONT-HEIGHT 2))))))
 (def COLOR-IDLE (Color/web "#8888AA"))
 (def COLOR-TYPING (Color/web "#FFFFFF"))
 
@@ -37,14 +36,20 @@
       (doto (.getGraphicsContext2D pane)
         (.clearRect 0 0 6 f/LABEL-FONT-HEIGHT)
         (.setFill (if position Color/WHITE Color/RED))
+        (.setStroke (if position Color/WHITE Color/RED))
         (draw-caret (or position 0) 6)))
 
     (let [gc (.getGraphicsContext2D pane)
           padding-x (+ LINE-WIDTH -3)
           width (+ padding-x (* f/LABEL-FONT-WIDTH (count value)))
-          height (+ 8 f/LABEL-FONT-HEIGHT)]
-      (.setWidth pane width)
-      (.clearRect gc 0 0 width height)
+          height (+ 8 f/LABEL-FONT-HEIGHT)
+          color (cond
+                  position COLOR-TYPING
+                  focus? COLOR-TYPING
+                  mark? Color/BLACK
+                  true COLOR-IDLE)]
+      (.setWidth pane (+ width LINE-WIDTH))
+      (.clearRect gc 0 0 (+ width LINE-WIDTH) height)
       ;; (.setStroke gc Color/WHITE)
       ;; (.strokeRect gc 0 0 width height)
       (when mark?
@@ -52,11 +57,8 @@
           (.setFill (Color/web "#AAAAFFAA"))
           (.fillRoundRect 0 0 width height 20 10)))
       (doto gc
-        (.setFill (cond
-                    position COLOR-TYPING
-                    focus? COLOR-TYPING
-                    mark? Color/BLACK
-                    true COLOR-IDLE))
+        (.setStroke color)
+        (.setFill color)
         (.setFont f/LABEL-FONT)
         (.fillText value padding-x f/LABEL-FONT-HEIGHT)
         (draw-caret position width))

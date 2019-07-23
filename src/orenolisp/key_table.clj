@@ -20,7 +20,9 @@
 (def layer-keymap
   {{:char \n} [cmd/open-new-window
                (cmd/add :child (form/input-ident))
-               cmd/switch-to-typing-mode]})
+               cmd/switch-to-typing-mode]
+   {:char \w} (cmd/widen-window 100)
+   {:char \W} (cmd/widen-window -100)})
 
 (def global-keymap
   {{:char \h :specials #{:alt}} cmd/evaluate
@@ -182,7 +184,8 @@
   (merge
    global-keymap
    node-selecting-keymap
-   {{:char \n :specials #{:alt}} (cmd/update-in-ugen-layer-id  ut/find-next-by)
+   {{:char \o} cmd/open-window-from-in-ugen
+    {:char \n :specials #{:alt}} (cmd/update-in-ugen-layer-id  ut/find-next-by)
     {:char \p :specials #{:alt}} (cmd/update-in-ugen-layer-id  ut/find-prev-by)}))
 
 (def key-table {:in    {:selecting in-ugen-selecting-keymap}
