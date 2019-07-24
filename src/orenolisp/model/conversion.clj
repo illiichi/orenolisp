@@ -39,7 +39,20 @@
                                  (throw (Exception. (str "unknown rate: " rate))))]
         (list in-func (list bus-func (keyword exp-id) :out-bus) num-chan)))))
 
-(def conversions (seq [(->InConversion) (->CommonConversion)]))
+(defrecord GaugeConversion []
+  IConversion
+  (sexp->node [this sexp]
+    (match sexp
+           (['u/tap-line node-id from to dur exp?] :seq)
+           [{:type :gauge :exp? exp? :node-id node-id} [from to dur]]
+           _ nil))
+  (node->sexp [this {:keys [node-id exp?] :as node} children]
+    (when (= (:type node) :gauge)
+      (assert (= (count children) 3) (str "wrong children for guage:" children))
+      (let [[from to dur] children]
+        (list 'u/tap-line node-id from to dur exp?)))))
+
+(def conversions (seq [(->InConversion) (->GaugeConversion) (->CommonConversion)]))
 (defn- find-first-non-nil [f xs]
   (reduce (fn [_ x] (when-let [y (f x)]
                       (reduced y))) nil xs))

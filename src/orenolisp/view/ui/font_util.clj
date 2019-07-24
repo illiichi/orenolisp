@@ -7,7 +7,9 @@
 (def LOG-FONT (Font/loadFont "file:resources/Orbitron-Medium.ttf" 15.0))
 (def SMALL-LABEL-FONT (Font/loadFont "file:resources/Roboto-Light.ttf" 16.0))
 (def CONTEXT-FONT (Font/loadFont "file:resources/Orbitron-Bold.ttf" 30.0))
-(def METER-FONT (Font/loadFont "file:resources/Roboto-Light.ttf" 30.0))
+(def METER-FONT (Font/loadFont "file:resources/Roboto-Light.ttf" 12.0))
+(def METER-TYPE-FONT (Font/loadFont "file:resources/Orbitron-Bold.ttf" 10.0))
+
 
 (defn- font-size [font]
   (-> (doto (Text.)

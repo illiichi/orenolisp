@@ -9,10 +9,10 @@
                 '[[[1]] 3 4/5]
                 '(a [b c])
                 '(* (sin-osc 880) (env-gen (env-perc 0.05 0.5)
-                                           (in (l4/sound-bus :l3 :out-bus) 2)))]]
+                                           (in (l4/sound-bus :l3 :out-bus) 2)))
+                '(* (sin-osc 440) (tap-line 10 1 100 30 true))]]
     (testing (str sexp)
       (let [editor (-> (ed/new-editor)
                        (conv/convert-sexp->editor sexp))]
         (ed/print-editor editor)
-        (is (= sexp (conv/convert-editor->sexp editor)))
-        ))))
+        (is (= sexp (conv/convert-editor->sexp editor)))))))

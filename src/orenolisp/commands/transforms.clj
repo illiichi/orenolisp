@@ -53,6 +53,12 @@
                     (list 'u/rg-lin '(lf-cub:kr 0.01) sexp sexp))))
 
 (defn wrap-by-line [editor]
-  (transform-sexp editor
-                  (fn [sexp]
-                    (list 'line sexp sexp 30))))
+  (let [node-id (ed/get-id editor :self)]
+    (-> editor
+        (transform-sexp
+         (fn [sexp]
+           (list 'u/tap-line node-id sexp sexp 30 false)))
+        (ed/move :parent)
+        ;; fixme when node-id has been changed
+        (as-> editor (ed/edit editor #(assoc % :node-id (ed/get-id editor :self)))))))
+

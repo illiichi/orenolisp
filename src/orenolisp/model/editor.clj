@@ -20,6 +20,10 @@
     :right (ut/find-next current-id (tr/get-siblings tree current-id))
     :self current-id))
 
+(defn get-children-ids
+  ([{:keys [current-id] :as editor}] (get-children-ids editor current-id))
+  ([{:keys [tree]} node-id] (tr/get-children tree node-id)))
+
 (defn move [{:keys [current-id tree] :as editor} direction]
   (if (sequential? direction)
     (reduce move editor direction)

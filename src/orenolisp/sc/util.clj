@@ -168,3 +168,6 @@
   `(let [snd# ~body]
          (overtone.sc.cgens.tap/tap ~(str "n-" node-id) 12 snd#)
          snd#))
+
+(defmacro tap-line [node-id from to dur exp?]
+  `(tap-tap ~node-id ~(list (if exp? 'x-line:kr 'line:kr) from to dur)))

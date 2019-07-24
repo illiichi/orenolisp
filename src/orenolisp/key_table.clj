@@ -188,7 +188,13 @@
     {:char \n :specials #{:alt}} (cmd/update-in-ugen-layer-id  ut/find-next-by)
     {:char \p :specials #{:alt}} (cmd/update-in-ugen-layer-id  ut/find-prev-by)}))
 
+(def gauge-selecting-keymap
+  (merge
+   global-keymap
+   paren-selecting-keymap))
+
 (def key-table {:in    {:selecting in-ugen-selecting-keymap}
+                :gauge  {:selecting gauge-selecting-keymap}
                 :newline {:selecting node-selecting-keymap}
                 :paren {:selecting paren-selecting-keymap}
                 :vector {:selecting paren-selecting-keymap}
