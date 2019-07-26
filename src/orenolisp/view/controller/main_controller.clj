@@ -40,20 +40,25 @@
 (defn dispatch-command [commands]
   (async/go (async/>! event-ch {:type :command :command commands})))
 
-(defmulti on-event :type)
-(defmethod on-event :keyboard [{:keys [key]}]
+(defmulti on-event (fn [key state] (:type key)))
+
+(defmethod on-event :keyboard [{:keys [key]} state]
   (history/update-typed-key key)
-  (swap! %state #(or (some->> (get-commands-by-key-event % key) (process-command %)) %)))
-(defmethod on-event :command [{:keys [command]}]
-  (swap! %state #(or (some->> command (process-command %)) %)))
+  (some->> (get-commands-by-key-event state key)
+           (process-command state)))
+(defmethod on-event :command [{:keys [command]} state]
+  (some->> command (process-command state)))
 
 (defn initialize-state []
   (def %state (atom (st/initial-state))))
 
 (defn start-loop [ch]
   (async/go-loop []
-    (let [event (async/<! ch)]
-      (try (on-event event)
-           (catch Exception e
-             (.printStackTrace e)))
+    (let [event (async/<! ch)
+          current-state @%state
+          next-state (try (on-event event current-state)
+                          (catch Exception e
+                            (.printStackTrace e)))]
+      (when next-state
+        (reset! %state next-state))
       (recur))))
