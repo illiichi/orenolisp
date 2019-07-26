@@ -15,14 +15,12 @@
   (and (= doing :typing) can-type?))
 
 (defn process-command [state commands]
-  (let [next-state (if (sequential? commands) (reduce (fn [state op] (op state))
+  (let [next-state (if (sequential? commands) (reduce (fn [state op]
+                                                        (if-let [next-state (op state)]
+                                                          next-state
+                                                          (reduced nil)))
                                                       state commands)
                        (commands state))]
-    (if-let [description (:keymap-description next-state)]
-      (context-display/update-view description)
-      (some-> next-state
-              st/current-context
-              context-display/update-view-by-context))
     (or next-state state)))
 
 (defn get-commands-by-key-event [state {:keys [can-type?] :as key}]
@@ -44,8 +42,14 @@
 
 (defmethod on-event :keyboard [{:keys [key]} state]
   (history/update-typed-key key)
-  (some->> (get-commands-by-key-event state key)
-           (process-command state)))
+  (when-let [next-state (some->> (get-commands-by-key-event state key)
+                                 (process-command state))]
+    (if-let [description (:keymap-description next-state)]
+      (context-display/update-view description)
+      (some-> next-state
+              st/current-context
+              context-display/update-view-by-context))
+    next-state))
 (defmethod on-event :command [{:keys [command]} state]
   (some->> command (process-command state)))
 
