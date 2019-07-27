@@ -79,3 +79,7 @@
     (.set arr-list idx-x y)
     (.set arr-list idx-y x)
     arr-list))
+
+(def ^:private threshold 1e-5)
+(defn enough-equal [x y]
+  (< (Math/abs (- x y)) threshold))

@@ -8,6 +8,7 @@
             [orenolisp.util :as ut]
             [orenolisp.view.ui.expression-ui :as eu]
             [orenolisp.view.ui.fx-util :as fx]
+            [orenolisp.watcher.engine :as we]
             [clojure.set :refer [union]]))
 
 (defrecord Size [w h])
@@ -117,6 +118,7 @@
         inner-size (-> (:size (get new-bounds root-id))
                        (update :w #(max % max-width))
                        (update :h #(max % org-height)))]
+    (we/unregister-all (:exp-id window) deleted)
     (-> window
         (update-window-size inner-size)
         (assoc :exp-table new-exp-table)

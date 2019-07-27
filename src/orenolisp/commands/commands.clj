@@ -18,18 +18,22 @@
 (defn cancel-temporary-keymap [state]
   (st/temporary-keymap state nil nil))
 
-(defn- with-current-window [{:keys [current-exp-id windows expressions] :as state} modified? f]
-  (let [prev-exp (get expressions current-exp-id)
+
+(defn- with-window [{:keys [windows expressions] :as state} exp-id modified? f]
+  (let [prev-exp (get expressions exp-id)
         new-exp (-> prev-exp
                     (ec/apply-step-function f))
-        new-window (-> (get windows current-exp-id)
+        new-window (-> (get windows exp-id)
                        (wc/update-window (:editor prev-exp)
                                          (:editor new-exp)))]
     (-> state
-        (assoc-in [:expressions current-exp-id] new-exp)
-        (assoc-in [:windows current-exp-id] new-window)
+        (assoc-in [:expressions exp-id] new-exp)
+        (assoc-in [:windows exp-id] new-window)
         (ut/when-> modified?
-                   (assoc-in [:windows current-exp-id :context :modified?] true)))))
+                   (assoc-in [:windows exp-id :context :modified?] true)))))
+
+(defn- with-current-window [{:keys [current-exp-id] :as state} modified? f]
+  (with-window state current-exp-id modified? f))
 
 (defn window-command [f]
   (fn [state] (with-current-window state true f)))
@@ -223,3 +227,17 @@
 (defn open-window-from-in-ugen [state]
   (when-let [next-exp-id (:exp-id (st/current-content state))]
     ((move-window (fn [_ _] next-exp-id)) state)))
+
+(defn excursion
+  ([f]
+   (window-command (fn [editor]
+                     (let [org-node-id (ed/get-id editor :self)]
+                       (-> editor f (ed/try-jump org-node-id))))))
+  ([exp-id node-id f]
+   (fn [state]
+     (with-window state exp-id true (fn [editor]
+                     (let [org-node-id (ed/get-id editor :self)]
+                       (-> editor
+                           (ed/jump node-id)
+                           f
+                           (ed/try-jump org-node-id))))))))

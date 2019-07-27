@@ -55,6 +55,11 @@
   (assert (get table node-id) (str "no value found:" node-id))
   (assoc editor :current-id node-id))
 
+(defn try-jump [{:keys [table] :as editor} node-id]
+  (if (get table node-id)
+    (assoc editor :current-id node-id)
+    editor))
+
 (def id-counter (AtomicInteger.))
 
 (def generate-new-id (ut/generate-counter))
