@@ -53,6 +53,11 @@
 (defn add-with-keep-position [direction form]
   (with-keep-position #(ed/add % direction form)))
 
+(defn switch-to-typing-mode [state]
+  (st/update-current-context state #(assoc % :doing :typing)))
+(defn switch-to-selecting-mode [state]
+  (st/update-current-context state #(assoc % :doing :selecting)))
+
 (defn move [direction]
   (window-command-pure #(ed/move % direction)))
 (defn move-most [direction]
@@ -60,7 +65,12 @@
 (defn edit [f]
   (window-command #(ed/edit % f)))
 (defn delete []
-  (window-command #(ed/delete %)))
+  (fn [state]
+    (if (ed/root? (st/current-editor state))
+      (-> state
+          (with-current-window true #(ed/add % :self (form/input-ident)))
+          (switch-to-typing-mode))
+      (with-current-window state true #(ed/delete %)))))
 (defn raise []
   (window-command #(ed/transport % :self (ed/get-id % :parent))))
 (defn slurp []
@@ -78,11 +88,6 @@
                     (if-let [target-id (ed/get-id editor direction)]
                       (ed/transport editor direction target-id)
                       editor))))
-
-(defn switch-to-typing-mode [state]
-  (st/update-current-context state #(assoc % :doing :typing)))
-(defn switch-to-selecting-mode [state]
-  (st/update-current-context state #(assoc % :doing :selecting)))
 
 (defn complete [table]
   (window-command

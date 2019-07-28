@@ -34,7 +34,7 @@
 
 (defn new-window [exp-id inner-layout]
   (doto (->Window exp-id inner-layout
-                  (wu/create) {} {:doing :selecting})
+                  (wu/create) {} {:doing :selecting :modified? true})
     (put-into-viewport)
     (draw-frame)))
 

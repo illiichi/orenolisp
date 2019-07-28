@@ -72,10 +72,6 @@
   ([editor] (get-attributes editor (:current-id editor)))
   ([{:keys [table]} target-id] (some-> (get table target-id) :attributes)))
 
-(defn set-attributes
-  ([editor target-id attrs]
-   (assoc-in editor [:table target-id :attributes] attrs)))
-
 (defn root? [{:keys [current-id tree]}]
   (not (tr/get-parent tree current-id)))
 
