@@ -81,7 +81,7 @@
         attribute-changed? (check-and-move-component component attributes new-attributes)
         result (assoc m :attributes new-attributes)]
     (when (or attribute-changed? (modified-ids node-id))
-      (eu/render-form node-id result editor bounds))
+      (fx/run-now (eu/render-form node-id result editor bounds)))
     result))
 
 (defn layout [editor window width]
