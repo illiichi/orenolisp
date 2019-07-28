@@ -10,6 +10,7 @@
             [orenolisp.view.ui.component.viewport :as viewport]
             [orenolisp.sc.eval :as sc]
             [orenolisp.sc.builder :as sb]
+            [orenolisp.watcher.engine :as we]
             [orenolisp.view.ui.component.animations :as anim]))
 
 (defn set-temporary-keymap [description keymap]
@@ -196,12 +197,18 @@
                   "(" (some-> e# (.getCause) (.getMessage)) ")")
          false)))
 
+(defn- register-watchers [{:keys [exp-id] :as expression} watcher-gens]
+  (doseq [[node-id watcher-gen] watcher-gens]
+    (let [watcher (watcher-gen expression node-id)]
+      (we/register exp-id node-id (comp watcher sc/get-node-value)))))
+
 (defn- evaluate-exp [state exp-id]
   (let [window (get-in state [:windows exp-id])
         ui (wc/get-frame-ui window)
         expression (get-in state [:expressions exp-id])
         result (no-exception? (-> expression sb/exp->sexp sc/doit))]
     (.play (anim/flash ui result))
+    (register-watchers expression (:watcher-gens window))
     (if result
       (assoc-in state [:windows exp-id :context :modified?] false)
       state)))
@@ -241,3 +248,8 @@
                            (ed/jump node-id)
                            f
                            (ed/try-jump org-node-id))))))))
+
+(defn register-watcher [watcher-gen]
+  (fn [state]
+    (let [[exp-id node-id] (st/current-id state)]
+      (assoc-in state [:windows exp-id :watcher-gens node-id] watcher-gen))))

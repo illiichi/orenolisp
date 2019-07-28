@@ -22,6 +22,11 @@
 (defn current-content [state]
   (ed/get-content (current-editor state)))
 
+(defn current-id [state]
+  (let [expression (current-expression state)
+        node-id (ed/get-id (:editor expression) :self)]
+    [(:exp-id expression) node-id]))
+
 (defn current-node-id [state]
   (:current-id (current-editor state)))
 

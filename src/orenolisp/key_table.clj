@@ -5,7 +5,8 @@
             [orenolisp.view.ui.component.animations :as anim]
             [orenolisp.commands.commands :as cmd]
             [orenolisp.commands.text-commands :as tx]
-            [orenolisp.commands.transforms :as trans]))
+            [orenolisp.commands.transforms :as trans]
+            [orenolisp.watcher.watchers :as watchers]))
 
 (def clear-keymap
   {{:char \r} cmd/refresh})
@@ -81,7 +82,8 @@
 
 (def transformation-ident-keymap
   {{:char \r} (cmd/window-command trans/wrap-by-range)
-   {:char \l} (cmd/window-command trans/wrap-by-line)})
+   {:char \l} [(cmd/window-command trans/wrap-by-line)
+               (cmd/register-watcher watchers/create-gauge-watcher)]})
 
 (def paren-selecting-keymap
   (merge
@@ -188,10 +190,14 @@
     {:char \n :specials #{:alt}} (cmd/update-in-ugen-layer-id  ut/find-next-by)
     {:char \p :specials #{:alt}} (cmd/update-in-ugen-layer-id  ut/find-prev-by)}))
 
+(defn- toggle-gauge [content]
+  (update content :exp? not))
+
 (def gauge-selecting-keymap
   (merge
    global-keymap
-   paren-selecting-keymap))
+   paren-selecting-keymap
+   {{:char \n :specials #{:alt}} (cmd/edit toggle-gauge)}))
 
 (def key-table {:in    {:selecting in-ugen-selecting-keymap}
                 :gauge  {:selecting gauge-selecting-keymap}

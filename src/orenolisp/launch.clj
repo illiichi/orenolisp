@@ -8,6 +8,7 @@
             [orenolisp.model.forms :as form]
             [orenolisp.commands.commands :as cmd]
             [orenolisp.model.editor :as ed]
+            [orenolisp.watcher.engine :as we]
             [orenolisp.state :as st]
             [orenolisp.sc.eval :as sc]
             [orenolisp.view.ui.component.viewport :as viewport]
@@ -23,6 +24,6 @@
 
 (do (fx/run-now (mu/render-base ki/keyboard-ch)
                 (mu/layout-content (mu/render)))
+    (we/start mc/event-ch)
     (mc/start-loop (async/pipe ki/keyboard-ch mc/event-ch))
     (viewport/move-center))
-

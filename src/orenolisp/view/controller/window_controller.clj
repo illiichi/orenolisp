@@ -105,6 +105,7 @@
   (let [max-width (get-in window [:layout :size :w])
         org-height (get-in window [:layout :size :h])
         layer-no (get-in window [:layout :layer-no])
+        exp-id (:exp-id window)
         exp-table   (get-in window [:exp-table])
         layout-option (-> (get-in window [:layout :position])
                           (assoc :w max-width))
@@ -118,9 +119,10 @@
         inner-size (-> (:size (get new-bounds root-id))
                        (update :w #(max % max-width))
                        (update :h #(max % org-height)))]
-    (we/unregister-all (:exp-id window) deleted)
+    (we/unregister-all exp-id deleted)
     (-> window
         (update-window-size inner-size)
+        (update :watcher-gens #(apply dissoc % deleted))
         (assoc :exp-table new-exp-table)
         (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))
 
