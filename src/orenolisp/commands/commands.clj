@@ -11,7 +11,8 @@
             [orenolisp.sc.eval :as sc]
             [orenolisp.sc.builder :as sb]
             [orenolisp.watcher.engine :as we]
-            [orenolisp.view.ui.component.animations :as anim]))
+            [orenolisp.view.ui.component.animations :as anim])
+  (:refer-clojure :exclude [slurp]))
 
 (defn set-temporary-keymap [description keymap]
   (fn [state] (st/temporary-keymap state description keymap)))
@@ -62,6 +63,21 @@
   (window-command #(ed/delete %)))
 (defn raise []
   (window-command #(ed/transport % :self (ed/get-id % :parent))))
+(defn slurp []
+  (window-command (fn [editor]
+                    (if-let [[_ target-id] (ed/get-ids editor [:left :parent])]
+                      (ed/transport editor :child target-id)
+                      editor))))
+(defn burf []
+  (window-command (fn [editor]
+                    (if-let [target-id (ed/get-id editor :parent)]
+                      (ed/transport editor :right target-id)
+                      editor))))
+(defn swap [direction]
+  (window-command (fn [editor]
+                    (if-let [target-id (ed/get-id editor direction)]
+                      (ed/transport editor direction target-id)
+                      editor))))
 
 (defn switch-to-typing-mode [state]
   (st/update-current-context state #(assoc % :doing :typing)))
