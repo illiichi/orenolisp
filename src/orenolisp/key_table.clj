@@ -45,20 +45,20 @@
     {:char \K} (cmd/swap :left)
     {:char \a :specials #{:ctrl :alt}} (cmd/move-most :parent)
     {:char \d :specials #{:ctrl}} (cmd/delete)
-    {:char "<space>" :specials #{:ctrl}} (cmd/window-command-pure ed/toggle-mark)
+    {:char "<space>" :specials #{:ctrl}} (cmd/window-command ed/toggle-mark)
     {:char \r} (cmd/raise)
     {:char \<} (cmd/slurp)
     {:char \>} (cmd/burf)
-    {:char \}}         [(cmd/with-keep-position #(ed/add % :parent (form/vector)))
+    {:char \}}         [(cmd/excursion #(ed/add % :parent (form/vector)))
                         (cmd/animate :parent anim/zoom-in)]
-    {:char \(}         [(cmd/with-keep-position #(ed/add % :parent (form/paren)))
+    {:char \(}         [(cmd/excursion #(ed/add % :parent (form/paren)))
                         (cmd/animate :parent anim/zoom-in)]
     {:char "<space>"}  [(cmd/add :right (form/input-ident))
                         cmd/switch-to-typing-mode]
     {:char "<SPACE>"}  [(cmd/add :left (form/input-ident))
                         cmd/switch-to-typing-mode]
     {:char "<space>" :specials #{:super}} (cmd/duplicate)
-    {:char "<enter>"}  (cmd/with-keep-position #(ed/add % :right (form/new-line)))}))
+    {:char "<enter>"}  (cmd/excursion #(ed/add % :right (form/new-line)))}))
 
 (def candidate-table
   [["sin-osc" "saw" "pulse" "blip"]
@@ -93,20 +93,20 @@
   (merge
    global-keymap
    node-selecting-keymap
-   {{:char \a} (cmd/window-command-pure #(ed/move % :child))
-    {:char \e} (cmd/window-command-pure #(-> % (ed/move :child) (ed/move-most :right)))
+   {{:char \a} (cmd/window-command #(ed/move % :child))
+    {:char \e} (cmd/window-command #(-> % (ed/move :child) (ed/move-most :right)))
     {:char \e :specials #{:alt}} (cmd/set-temporary-keymap "extraction"
                                                            extraction-keymap)
     {:char \t :specials #{:alt}} (cmd/set-temporary-keymap "transformation"
                                                            transformation-keymap)
-    {:char \n :specials #{:alt}} (cmd/with-keep-position
+    {:char \n :specials #{:alt}} (cmd/excursion
                                    (fn [editor]
                                      (-> editor
                                          (ed/move :child)
                                          (ed/edit #(update % :value next-candidate)))))
     {:char \i :specials #{:ctrl}} [(cmd/add :child (form/input-ident))
                                    cmd/switch-to-typing-mode]
-    {:char \s} (cmd/window-command-pure #(-> % (ed/move :child) (ed/move :right)))}))
+    {:char \s} (cmd/window-command #(-> % (ed/move :child) (ed/move :right)))}))
 
 (def ident-selecting-keymap
   (merge

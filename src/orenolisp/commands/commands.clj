@@ -21,7 +21,7 @@
   (st/temporary-keymap state nil nil))
 
 
-(defn- with-window [{:keys [windows expressions] :as state} exp-id modified? f]
+(defn- with-window [{:keys [windows expressions] :as state} exp-id f]
   (let [prev-exp (get expressions exp-id)
         new-exp (-> prev-exp
                     (ec/apply-step-function f))
@@ -30,28 +30,33 @@
                                          (:editor new-exp)))]
     (-> state
         (assoc-in [:expressions exp-id] new-exp)
-        (assoc-in [:windows exp-id] new-window)
-        (ut/when-> modified?
-                   (assoc-in [:windows exp-id :context :modified?] true)))))
+        (assoc-in [:windows exp-id] new-window))))
 
-(defn- with-current-window [{:keys [current-exp-id] :as state} modified? f]
-  (with-window state current-exp-id modified? f))
+(defn- with-current-window [{:keys [current-exp-id] :as state} f]
+  (with-window state current-exp-id f))
 
 (defn window-command [f]
-  (fn [state] (with-current-window state true f)))
-(defn window-command-pure [f]
-  (fn [state] (with-current-window state false f)))
+  (fn [state] (with-current-window state f)))
 
 (defn add [direction form]
   (window-command #(ed/add % direction form)))
 
-(defn with-keep-position [f]
-  (window-command
-   #(let [node-id (ed/get-id % :self)]
-      (some-> % f (ed/jump node-id)))))
+(defn excursion
+  ([f]
+   (window-command (fn [editor]
+                     (let [org-node-id (ed/get-id editor :self)]
+                       (-> editor f (ed/try-jump org-node-id))))))
+  ([exp-id node-id f]
+   (fn [state]
+     (with-window state exp-id (fn [editor]
+                     (let [org-node-id (ed/get-id editor :self)]
+                       (-> editor
+                           (ed/jump node-id)
+                           f
+                           (ed/try-jump org-node-id))))))))
 
 (defn add-with-keep-position [direction form]
-  (with-keep-position #(ed/add % direction form)))
+  (excursion #(ed/add % direction form)))
 
 (defn switch-to-typing-mode [state]
   (st/update-current-context state #(assoc % :doing :typing)))
@@ -59,18 +64,18 @@
   (st/update-current-context state #(assoc % :doing :selecting)))
 
 (defn move [direction]
-  (window-command-pure #(ed/move % direction)))
+  (window-command #(ed/move % direction)))
 (defn move-most [direction]
-  (window-command-pure #(ed/move-most % direction)))
+  (window-command #(ed/move-most % direction)))
 (defn edit [f]
   (window-command #(ed/edit % f)))
 (defn delete []
   (fn [state]
     (if (ed/root? (st/current-editor state))
       (-> state
-          (with-current-window true #(ed/add % :self (form/input-ident)))
+          (with-current-window #(ed/add % :self (form/input-ident)))
           (switch-to-typing-mode))
-      (with-current-window state true #(ed/delete %)))))
+      (with-current-window state #(ed/delete %)))))
 (defn raise []
   (window-command #(ed/transport % :self (ed/get-id % :parent))))
 (defn slurp []
@@ -99,7 +104,7 @@
 
 (defn update-in-ugen-layer-id [find-f]
   (fn [state]
-    (with-current-window state true
+    (with-current-window state
       (fn [editor]
         (ed/edit editor
                  (fn [{current :exp-id :as m}]
@@ -194,7 +199,7 @@
           new-exp (ec/new-expression copied-editor (create-sc-option rate next-layer-no))
           new-layout (create-new-layout (st/current-ui state) next-layer-no)]
       (sc/set-volume new-exp 1)
-      (-> (with-current-window state true
+      (-> (with-current-window state
             (fn [editor]
               (ed/add editor :self (form/in-ugen rate (:exp-id new-exp)))))
           (open-window new-exp new-layout)
@@ -255,20 +260,6 @@
 (defn open-window-from-in-ugen [state]
   (when-let [next-exp-id (:exp-id (st/current-content state))]
     ((move-window (fn [_ _] next-exp-id)) state)))
-
-(defn excursion
-  ([f]
-   (window-command (fn [editor]
-                     (let [org-node-id (ed/get-id editor :self)]
-                       (-> editor f (ed/try-jump org-node-id))))))
-  ([exp-id node-id f]
-   (fn [state]
-     (with-window state exp-id true (fn [editor]
-                     (let [org-node-id (ed/get-id editor :self)]
-                       (-> editor
-                           (ed/jump node-id)
-                           f
-                           (ed/try-jump org-node-id))))))))
 
 (defn register-watcher [watcher-gen]
   (fn [state]

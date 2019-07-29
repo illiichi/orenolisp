@@ -84,7 +84,9 @@
       (fx/run-now (eu/render-form node-id result editor bounds)))
     result))
 
-(defn layout [editor window width]
+(defn layout
+  "fixme: almost same as update-window"
+  [editor window width]
   (let [org-height (get-in window [:layout :size :h])
         exp-table   (get-in window [:exp-table])
         layout-option (-> (get-in window [:layout :position])
@@ -101,6 +103,9 @@
         (update-window-size inner-size)
         (assoc :exp-table new-exp-table))))
 
+(defn- check-modified? [diff]
+  (not (every? empty? (vals diff))))
+
 (defn update-window [window prev-editor new-editor]
   (let [max-width (get-in window [:layout :size :w])
         org-height (get-in window [:layout :size :h])
@@ -111,7 +116,8 @@
                           (assoc :w max-width))
         new-bounds (layout/calcurate-layout layout-decision/build-size-or-option
                                             layout-option new-editor)
-        {:keys [created modified deleted]} (ed/diff prev-editor new-editor)
+        {:keys [created modified deleted] :as diff} (ed/diff prev-editor new-editor)
+        modified? (check-modified? diff)
         exp-table (create-and-delete-ui new-editor layer-no exp-table created deleted)
         new-exp-table (ut/map-kv (partial update-node new-editor new-bounds
                                           (union created modified)) exp-table)
@@ -124,6 +130,7 @@
         (update-window-size inner-size)
         (update :watcher-gens #(apply dissoc % deleted))
         (assoc :exp-table new-exp-table)
+        (update-in [:context :modified?] #(or % modified?))
         (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))
 
 (defn- delete-forms [{:keys [exp-table]} ids]
