@@ -12,8 +12,7 @@
                          #(-> %
                               (ed/move [:child :right])
                               (ed/transport :self node-id)))
-          (cmd/excursion exp-id node-id
-                         #(ed/edit % (fn [m] (assoc m :ratio r)))))))))
+          (cmd/edit-attributes exp-id node-id #(assoc % :ratio r)))))))
 
 (defn create-gauge-watcher [{:keys [exp-id editor]} node-id]
   (let [exp? (:exp? (ed/get-content editor))

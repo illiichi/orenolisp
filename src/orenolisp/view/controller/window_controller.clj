@@ -136,3 +136,19 @@
   (let [ids (ed/all-node-ids editor)]
     (delete-forms window ids)
     (update-window window (ed/new-editor) editor)))
+
+(defn- make-bounds-of-children [window editor node-id]
+  (let [children-id (ed/get-children-ids editor node-id)]
+    (reduce (fn [acc id]
+              (let [size (get-in window [:exp-table id :attributes :size])]
+                (assoc acc id {:size size})))
+            {}
+            children-id)))
+
+(defn update-node-attributes [window editor node-id f]
+  (let [temporary-bounds (make-bounds-of-children window editor node-id)
+                                        ; ad-hoc implementation for gauge
+        m (-> (get-in window [:exp-table node-id])
+              (update :attributes f))]
+    (fx/run-now (eu/render-form node-id m editor temporary-bounds))
+    (assoc window [:exp-table node-id] m)))

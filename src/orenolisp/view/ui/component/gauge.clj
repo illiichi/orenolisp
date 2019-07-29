@@ -9,7 +9,7 @@
     (.setEffect (doto (Glow.)
                   (.setLevel 1)))))
 
-(defn render [ui {:keys [size focus? mark?]} {:keys [exp? ratio]} children-bounds]
+(defn render [ui {:keys [size focus? mark? ratio]} {:keys [exp?]} children-bounds]
   (let [{:keys [w h]} size
         [size-from size-to size-dur] (map :size children-bounds)]
     (doto ui

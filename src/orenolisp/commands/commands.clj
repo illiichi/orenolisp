@@ -274,3 +274,9 @@
   (fn [state]
     (let [[exp-id node-id] (st/current-id state)]
       (assoc-in state [:windows exp-id :watcher-gens node-id] watcher-gen))))
+
+(defn edit-attributes [exp-id node-id f]
+  (fn [state]
+    (let [editor (get-in state [:expressions exp-id :editor])]
+    (-> state
+        (update-in [:windows exp-id] #(wc/update-node-attributes % editor node-id f))))))
