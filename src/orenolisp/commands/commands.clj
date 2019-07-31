@@ -257,6 +257,13 @@
                  (let [new-width (+ dw (get-in w [:layout :size :w]))]
                    (wc/layout (st/current-editor state) w new-width))))))
 
+(defn fit-window-height [state]
+  (update-in state [:windows (:current-exp-id state)]
+               (fn [w]
+                 (wc/layout (st/current-editor state)
+                            w
+                            (get-in w [:layout :size :w]) true))))
+
 (defn open-window-from-in-ugen [state]
   (when-let [next-exp-id (:exp-id (st/current-content state))]
     ((move-window (fn [_ _] next-exp-id)) state)))

@@ -86,22 +86,24 @@
 
 (defn layout
   "fixme: almost same as update-window"
-  [editor window width]
-  (let [org-height (get-in window [:layout :size :h])
-        exp-table   (get-in window [:exp-table])
-        layout-option (-> (get-in window [:layout :position])
-                          (assoc :w width))
-        new-bounds (layout/calcurate-layout layout-decision/build-size-or-option
-                                            layout-option editor)
-        new-exp-table (ut/map-kv (partial update-node editor new-bounds
-                                          #{}) exp-table)
-        root-id (ed/get-id editor :root)
-        inner-size (-> (:size (get new-bounds root-id))
-                       (update :w #(max % width))
-                       (update :h #(max % org-height)))]
-    (-> window
-        (update-window-size inner-size)
-        (assoc :exp-table new-exp-table))))
+  ([editor window width] (layout editor window width false))
+  ([editor window width fit-height?]
+   (let [org-height (get-in window [:layout :size :h])
+         exp-table   (get-in window [:exp-table])
+         layout-option (-> (get-in window [:layout :position])
+                           (assoc :w width))
+         new-bounds (layout/calcurate-layout layout-decision/build-size-or-option
+                                             layout-option editor)
+         new-exp-table (ut/map-kv (partial update-node editor new-bounds
+                                           #{}) exp-table)
+         root-id (ed/get-id editor :root)
+         inner-size (-> (:size (get new-bounds root-id))
+                        (update :w #(max % width))
+                        (update :h #(if fit-height? %
+                                        (max % org-height))))]
+     (-> window
+         (update-window-size inner-size)
+         (assoc :exp-table new-exp-table)))))
 
 (defn- check-modified? [diff]
   (not (every? empty? (vals diff))))

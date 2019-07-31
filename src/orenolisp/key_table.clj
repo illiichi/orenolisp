@@ -24,7 +24,8 @@
                (cmd/add :child (form/input-ident))
                cmd/switch-to-typing-mode]
    {:char \w} (cmd/widen-window 100)
-   {:char \W} (cmd/widen-window -100)})
+   {:char \W} (cmd/widen-window -100)
+   {:char \h} cmd/fit-window-height})
 
 (def global-keymap
   {{:char \h :specials #{:alt}} cmd/evaluate
