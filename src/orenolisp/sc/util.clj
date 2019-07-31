@@ -171,3 +171,9 @@
 
 (defmacro tap-line [node-id from to dur exp?]
   `(tap-tap ~node-id ~(list (if exp? 'x-line:kr 'line:kr) from to dur)))
+
+(defmacro c-saw [freq phase c-min c-max min max step]
+  `(-> (lf-saw:kr ~freq ~phase)
+       (clip ~c-min ~c-max)
+       (lin-lin ~c-min ~c-max ~min ~max)
+       (round ~step)))

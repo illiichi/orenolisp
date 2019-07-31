@@ -5,7 +5,7 @@
 
 (def default-option {:swap-option {:switch-dur 8
                                    :fade-out-dur 64}
-                     :period 32})
+                     :period 8})
 
 (defn- exp-id->sym [exp-id]
   (symbol exp-id))
