@@ -61,7 +61,7 @@
     (let [event (async/<! ch)
           current-state @%state
           next-state (try (on-event event current-state)
-                          (catch Exception e
+                          (catch Throwable e
                             (.printStackTrace e)))]
       (when next-state
         (reset! %state next-state))
