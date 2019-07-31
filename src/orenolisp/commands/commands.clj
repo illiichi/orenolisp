@@ -271,3 +271,8 @@
     (let [editor (get-in state [:expressions exp-id :editor])]
     (-> state
         (update-in [:windows exp-id] #(wc/update-node-attributes % editor node-id f))))))
+
+(defn stop-sound [state]
+  (let [exp-id (:current-exp-id state)]
+    (sc/stop-sound exp-id))
+  state)

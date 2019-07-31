@@ -9,7 +9,8 @@
             [orenolisp.watcher.watchers :as watchers]))
 
 (def clear-keymap
-  {{:char \r} cmd/refresh})
+  {{:char \r} cmd/refresh
+   {:char \c} cmd/stop-sound})
 
 (def initial-keymap
   {{:char "<space>"} [cmd/open-new-window
