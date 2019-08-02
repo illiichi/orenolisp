@@ -82,9 +82,12 @@
   {{:char \a} (cmd/extract-as-in-ugen :audio)
    {:char \k} (cmd/extract-as-in-ugen :control)})
 (def transformation-keymap
-  {{:char \m} (cmd/window-command trans/wrap-by-map)
+  {{:char \m} [(cmd/window-command trans/wrap-by-map)
+               cmd/switch-to-typing-mode]
    {:char \r} (cmd/window-command trans/wrap-by-reduce)
-   {:char \t} (cmd/window-command trans/threading)})
+   {:char \t} (cmd/window-command trans/threading)
+   {:char \b} [(cmd/window-command trans/let-binding)
+               cmd/switch-to-typing-mode]})
 
 (def transformation-ident-keymap
   {{:char \r} (cmd/window-command trans/wrap-by-range)

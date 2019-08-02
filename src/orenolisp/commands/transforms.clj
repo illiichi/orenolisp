@@ -4,7 +4,7 @@
             [orenolisp.model.editor :as ed]))
 
 (defn wrap-by-map [editor]
-  (let [parent-editor (-> '(map (fn [x]) [x])
+  (let [parent-editor (-> '(map (fn [___]) [___])
                           conv/convert-sexp->editor
                           (ed/move [:root :child :right]))
         element-id (last (ed/get-ids parent-editor [:right :child]))]
@@ -62,3 +62,17 @@
         ;; fixme when node-id has been changed
         (as-> editor (ed/edit editor #(assoc % :node-id (ed/get-id editor :self)))))))
 
+
+(defn let-binding [editor]
+  (let [parent-editor (-> '(let [___ ___])
+                          conv/convert-sexp->editor
+                          (ed/move :root))
+        func-arg-id (last (ed/get-ids parent-editor [:child :right :child :right]))]
+    (some-> editor
+            (ed/add-editor :parent parent-editor)
+            (ed/with-marks (fn [editor [arg-node-id]]
+                             (when arg-node-id
+                               (-> editor
+                                   (ed/jump arg-node-id)
+                                   (ed/swap func-arg-id)
+                                   (ed/move :left))))))))

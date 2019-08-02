@@ -61,7 +61,9 @@
 (defn switch-to-typing-mode [state]
   (st/update-current-context state #(assoc % :doing :typing)))
 (defn switch-to-selecting-mode [state]
-  (st/update-current-context state #(assoc % :doing :selecting)))
+  (-> state
+      (st/clear-other-cursors)
+      (st/update-current-context #(assoc % :doing :selecting))))
 
 (defn move [direction]
   (window-command #(ed/move % direction)))
