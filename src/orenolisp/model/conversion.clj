@@ -1,6 +1,8 @@
 (ns orenolisp.model.conversion
-  (:require [orenolisp.model.tree :as tr]
+  (:require [orenolisp.util :as u]
+            [orenolisp.model.tree :as tr]
             [orenolisp.model.editor :as ed]
+            [orenolisp.model.forms :as forms]
             [clojure.core.match :refer [match]]))
 
 (defprotocol IConversion
@@ -10,10 +12,11 @@
 (defrecord CommonConversion []
   IConversion
   (sexp->node [this sexp]
-    (cond (vector? sexp) [{:type :vector} sexp]
+    (cond (vector? sexp) [(forms/vector) sexp]
           (map? sexp) (throw (Exception. "map not suported"))
-          (seq? sexp) [{:type :paren} sexp]
-          true [{:type :ident :value (pr-str sexp)} []]))
+          (seq? sexp) [(forms/paren) sexp]
+          (= '___ sexp) [(forms/input-ident) [] true]
+          true [(forms/ident (pr-str sexp)) []]))
   (node->sexp [this node children]
     (case (:type node)
       :paren (apply list children)
@@ -79,8 +82,10 @@
   ([sexp] (convert-sexp->editor (ed/new-editor) nil sexp))
   ([editor sexp] (convert-sexp->editor editor nil sexp))
   ([editor parent-id sexp]
-   (if-let [[node children] (apply-conversions-sexp->node sexp)]
-     (let [next-editor (ed/add editor parent-id :child node)]
+   (if-let [[node children placeholder?] (apply-conversions-sexp->node sexp)]
+     (let [next-editor (-> editor
+                           (ed/add parent-id :child node)
+                           (u/when-> placeholder? (ed/add-as-multiple-cursors)))]
        (reduce #(convert-sexp->editor %1 (ed/get-id next-editor :self) %2)
                next-editor children))
      (throw (Exception. (str "no conversion found: " sexp))))))

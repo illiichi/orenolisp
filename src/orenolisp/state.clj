@@ -43,3 +43,7 @@
 
 (defn update-current-context [{:keys [current-exp-id] :as state} f]
   (update-in state [:windows current-exp-id :context] f))
+
+
+(defn clear-other-cursors [{:keys [current-exp-id] :as state}]
+  (update-in state [:expressions current-exp-id :editor] ed/clear-other-cursor))

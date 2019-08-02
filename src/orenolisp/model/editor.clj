@@ -106,6 +106,7 @@
           #(tr/add-parent tree target-id (:tree editor2) (get-id editor2 :self))
           #(tr/add tree target-id direction (:tree editor2))))
        (assoc :current-id (get-id editor2 :self))
+       (update :multiple-cursors concat (:multiple-cursors editor2))
        (update :table merge (:table editor2)))))
 
 (defn transport [{:keys [current-id tree] :as editor} direction target-id]
@@ -116,8 +117,17 @@
   (-> editor
       (apply-tree-operation #(tr/swap tree current-id target-id))))
 
-(defn edit [{:keys [current-id] :as editor} f]
-  (update editor :table update-in [current-id :content] f))
+(defn add-as-multiple-cursors
+  ([{:keys [current-id] :as editor}] (add-as-multiple-cursors editor current-id))
+  ([editor node-id] (update editor :multiple-cursors #(cons node-id %))))
+
+(defn clear-other-cursor [editor]
+  (dissoc editor :multiple-cursors))
+
+(defn edit [{:keys [current-id multiple-cursors] :as editor} f]
+  (reduce (fn [editor node-id] (update editor :table update-in [node-id :content] f))
+          editor
+          (if (empty? multiple-cursors) [current-id] multiple-cursors)))
 
 (defn focus? [{:keys [current-id]} target-id] (= target-id current-id))
 (defn get-marks [{:keys [marks]}] marks)
