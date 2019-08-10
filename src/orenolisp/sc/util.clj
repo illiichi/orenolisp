@@ -67,6 +67,8 @@
     lf-tri:kr -1
     lf-saw -1
     lf-saw:kr -1
+    lf-cub    -1
+    lf-cub:kr -1
     white-noise -1
     lf-noise0 -1
     lf-noise1 -1

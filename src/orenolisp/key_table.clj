@@ -86,6 +86,7 @@
                cmd/switch-to-typing-mode]
    {:char \r} (cmd/window-command trans/wrap-by-reduce)
    {:char \t} (cmd/window-command trans/threading)
+   {:char \s} (cmd/window-command trans/append-splay-tanh)
    {:char \b} [(cmd/window-command trans/let-binding)
                cmd/switch-to-typing-mode]})
 
@@ -151,7 +152,7 @@
    "cheat" '(-> (map (fn [x y]
                        (* (rhpf (white-noise) (* 100 y) 0.4) 256
                           (env-gen (env-perc 1e-6 0.01) (impulse x))))
-                     (take 16 (cycle [1 2 3 5 7 9]))
+                     (take 4 (cycle [1 2 3 5 7 9]))
                      (reductions * 1 (cycle [5/2 3/2 4/5 5/11])))
                splay
                (u/reduce-> (fn [acc [x y z]]
@@ -159,7 +160,7 @@
                            [[8000 1/8 1/2] [20 1/12 1/16] [300 1.1 1/8]])
                (u/reduce-> free-verb [0.1 0.4 0.2])
                (g-verb 1.1)
-               tanh)
+               tanh (* 1/2))
    "cheat3" '(-> (map (fn [freq]
                         (-> (sin-osc freq)
                             (clip:ar -1 (u/sin-r 0.18 -1/2 1))

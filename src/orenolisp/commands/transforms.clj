@@ -76,3 +76,12 @@
                                    (ed/jump arg-node-id)
                                    (ed/swap func-arg-id)
                                    (ed/move :left))))))))
+(defn append-splay-tanh [editor]
+  (let [parent-editor (-> '(-> (splay) tanh)
+                          conv/convert-sexp->editor
+                          (ed/move :root))
+        threading-node-id (ed/get-id parent-editor :child)]
+    (some-> editor
+            (ed/add-editor :parent parent-editor)
+            (ed/move [:child :right :right :right])
+            (ed/transport :right threading-node-id))))
