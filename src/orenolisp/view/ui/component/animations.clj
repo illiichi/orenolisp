@@ -122,6 +122,25 @@
                                      (make-delay delay-s)))
        (fx/on-animation-finished (fn [_]
                                    (.setEffect ui nil)))))))
+(defn enphasize
+  ([ui]
+   (let [opacity-p (.opacityProperty ui)
+         color (ColorAdjust.)
+         brigt-p (.brightnessProperty color)
+         [effect key-frames] (shadow-and-keyframes)
+         org-effect (.getEffect ui)]
+     (.setEffect ui effect)
+     (doto (fx/create-animation (concat key-frames
+                                        [(fx/->KeyFrame 0 [opacity-p 0]
+                                                        [brigt-p 1])
+                                         (fx/->KeyFrame 30
+                                                        [opacity-p 1])
+                                         (fx/->KeyFrame 100
+                                                        [brigt-p 0.8]
+                                                        [opacity-p 1])
+                                         (fx/->KeyFrame 220 [brigt-p 0])]))
+       (fx/on-animation-finished (fn [_]
+                                   (.setEffect ui org-effect)))))))
 
 (defn white-out [ui]
   (let [opacity-p (.opacityProperty ui)

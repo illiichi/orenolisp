@@ -108,6 +108,10 @@
 (defn- check-modified? [diff]
   (not (every? empty? (vals diff))))
 
+(defn- add-animation [uis]
+  (doseq [ui uis]
+    (.play (anim/enphasize ui))))
+
 (defn update-window [window prev-editor new-editor]
   (let [max-width (get-in window [:layout :size :w])
         org-height (get-in window [:layout :size :h])
@@ -128,6 +132,9 @@
                        (update :w #(max % max-width))
                        (update :h #(max % org-height)))]
     (we/unregister-all exp-id deleted)
+    (add-animation (->> (union created modified)
+                        (map new-exp-table)
+                        (map :component)))
     (-> window
         (update-window-size inner-size)
         (update :watcher-gens #(apply dissoc % deleted))
