@@ -13,13 +13,17 @@
 (def AUDIO-LINE-COLOR (Color/web "#00CCFF"))
 (def CONTROL-LINE-COLOR (Color/web "#EEAAFF"))
 (def BACKGROUND-COLOR (Color/web "#001122AA"))
+(def STOP-LINE-COLOR (Color/web "#333333"))
 
 (defn create []
   (Canvas.))
 
 (def ^:const W 5)
-(defn- render [canvas w h exp-id rate]
-  (let [col (if (= rate :audio) AUDIO-LINE-COLOR CONTROL-LINE-COLOR)]
+(defn- render [canvas w h exp-id {:keys [rate playing?]}]
+  (let [col (case [playing? rate]
+              [true :audio] AUDIO-LINE-COLOR
+              [true :control] CONTROL-LINE-COLOR
+              STOP-LINE-COLOR)]
     (doto canvas
       (.setWidth w)
       (.setHeight h))
@@ -54,7 +58,7 @@
 (defn draw-with-inner-size [ui exp-id {:keys [w h]}]
   (let [w (min MAX-WIDTH w)
         [required-width required-height] (outer-size w h)]
-    (render ui required-width required-height exp-id :audio)))
+    (render ui required-width required-height exp-id {:rate :audio :playing? true})))
 
 (defn select-window [window]
   (when window
