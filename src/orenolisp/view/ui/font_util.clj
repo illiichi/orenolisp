@@ -4,7 +4,8 @@
 ;; this value should be same as style.css
 (def LABEL-FONT (Font/font "file:resources/Arvo-Regular.ttf" 20.0))
 (def PORTAL-FONT (Font/font "file:resources/Scifi Adventure.otf" 22.0))
-(def LOG-FONT (Font/loadFont "file:resources/Orbitron-Medium.ttf" 15.0))
+(def LOG-FONT (Font/loadFont "file:resources/Orbitron-Medium.ttf" 12.0))
+(def TYPING-LOG-FONT (Font/loadFont "file:resources/Orbitron-Medium.ttf" 15.0))
 (def SMALL-LABEL-FONT (Font/loadFont "file:resources/Roboto-Light.ttf" 16.0))
 (def CONTEXT-FONT (Font/loadFont "file:resources/Orbitron-Bold.ttf" 30.0))
 (def METER-FONT (Font/loadFont "file:resources/Roboto-Light.ttf" 12.0))

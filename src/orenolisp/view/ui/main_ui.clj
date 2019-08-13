@@ -3,6 +3,7 @@
             [orenolisp.view.ui.component.typed-history :as typed-history]
             [orenolisp.view.ui.component.context-display :as context-display]
             [orenolisp.view.ui.component.viewport :as viewport]
+            [orenolisp.view.ui.component.logscreen :as logscreen]
             [clojure.core.async :as async])
   (:import
    (javafx.application Application)
@@ -77,6 +78,8 @@
 
 (defn render []
   (doto (BorderPane.)
-    (.setCenter (viewport/render))
+    (.setCenter (doto (StackPane.)
+                  (fx/add-child (logscreen/render))
+                  (fx/add-child (viewport/render))))
     (.setBottom (create-bottom (typed-history/create-control)
                                (context-display/create)))))

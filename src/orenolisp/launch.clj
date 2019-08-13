@@ -13,6 +13,7 @@
             [orenolisp.sc.eval :as sc]
             [orenolisp.view.ui.component.viewport :as viewport]
             [orenolisp.view.controller.main-controller :as mc]
+            [orenolisp.view.ui.component.logscreen :as log]
             [orenolisp.view.controller.window-controller :as wc]
             [clojure.core.async :as async])
   (:import (javafx.scene.paint Color)
@@ -26,4 +27,5 @@
                 (mu/layout-content (mu/render)))
     (we/start mc/event-ch)
     (mc/start-loop (async/pipe ki/keyboard-ch mc/event-ch))
+    (log/start)
     (viewport/move-center))

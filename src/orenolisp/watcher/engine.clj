@@ -1,6 +1,7 @@
 (ns orenolisp.watcher.engine
   (:require [orenolisp.sc.timer :as timer]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [orenolisp.view.ui.component.logscreen :as log]))
 
 (def %handler-table (atom {}))
 
@@ -21,12 +22,15 @@
 
 (defn unregister [exp-id node-id]
   (println "unregistered:" exp-id node-id)
+  (log/writeln "unregistered: " exp-id " node-id:" node-id)
   (swap! %handler-table dissoc [exp-id node-id]))
 
 (defn unregister-all [exp-id node-ids]
-  (swap! %handler-table #(reduce (fn [acc node-id]
-                                   (if-let [handler (get acc [exp-id node-id])]
-                                     (do (println "unregistered:" exp-id node-id)
-                                         (dissoc acc [exp-id node-id]))
-                                     acc))
-                                 % node-ids)))
+  (swap! %handler-table
+         #(reduce (fn [acc node-id]
+                    (if-let [handler (get acc [exp-id node-id])]
+                      (do (println "unregistered:" exp-id node-id)
+                          (log/writeln "unregistered: " exp-id " node-id:" node-id)
+                          (dissoc acc [exp-id node-id]))
+                      acc))
+                  % node-ids)))

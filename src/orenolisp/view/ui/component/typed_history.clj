@@ -9,7 +9,7 @@
 
 (defn create-control []
   (let [con (doto (TextArea.)
-              (.setFont f/LOG-FONT)
+              (.setFont f/TYPING-LOG-FONT)
               (.setPrefRowCount 2)
               (.setFocusTraversable false)
               (.setWrapText true)

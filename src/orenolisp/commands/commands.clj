@@ -11,7 +11,8 @@
             [orenolisp.sc.eval :as sc]
             [orenolisp.sc.builder :as sb]
             [orenolisp.watcher.engine :as we]
-            [orenolisp.view.ui.component.animations :as anim])
+            [orenolisp.view.ui.component.animations :as anim]
+            [orenolisp.view.ui.component.logscreen :as log])
   (:refer-clojure :exclude [slurp]))
 
 (defn set-temporary-keymap [description keymap]
@@ -155,6 +156,7 @@
     state))
 
 (defn- open-window [state {:keys [exp-id] :as expression} new-layout]
+  (log/writeln "open new window:" exp-id)
   (let [current-layer-no (or (some-> (st/current-window state)
                                      (get-in [:layout :layer-no]))
                              0)
@@ -223,6 +225,8 @@
        (catch Throwable e#
          (println "error: " (or (.getMessage e#) e#)
                   "(" (some-> e# (.getCause) (.getMessage)) ")")
+         (log/writeln "error: " (or (.getMessage e#) e#)
+                      "(" (some-> e# (.getCause) (.getMessage)) ")")
          false)))
 
 (defn- register-watchers [{:keys [exp-id] :as expression} watcher-gens]

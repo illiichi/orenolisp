@@ -4,6 +4,7 @@
             [llll.macro.control :refer :all]
             [orenolisp.sc.builder :as sb]
             [orenolisp.sc.util :as u]
+            [orenolisp.view.ui.component.logscreen :as log]
             [overtone.sc.server :as sc-server]))
 
 (defn def-set-volume []
@@ -13,11 +14,12 @@
 (defn finish []
   (l4/finish)
   (def-set-volume)
-  (sc-server/kill-server))
+  (sc-server/kill-server)
+  (log/writeln "SuperCollider finished."))
 
 (defn doit [sexp]
   (binding [*ns* (find-ns 'orenolisp.sc.eval)]
-    (println sexp)
+    (log/writeln "evaluate:" sexp)
     (eval sexp)))
 
 (defn initialize []
@@ -27,7 +29,8 @@
   (binding [*ns* (find-ns 'orenolisp.sc.eval)]
     (use 'overtone.core)
     (sc-server/connect-external-server "localhost" 57110)
-    (l4/initialize {})))
+    (l4/initialize {})
+    (log/writeln "SuperCollider connected.")))
 (def-set-volume)
 
 (defn get-exps-vol [exp-ids]
