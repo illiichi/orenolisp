@@ -18,7 +18,7 @@
       (doto gc
         (.setLineWidth LINE-WIDTH)
         (.strokeLine caret-x 6 caret-x (+ f/LABEL-FONT-HEIGHT 2))))))
-(def COLOR-IDLE (Color/web "#8888AA"))
+(def COLOR-IDLE (Color/web "#CCCCFF"))
 (def COLOR-TYPING (Color/web "#FFFFFF"))
 
 (def focus-effect

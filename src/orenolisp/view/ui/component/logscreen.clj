@@ -8,35 +8,39 @@
 
 (declare %textarea)
 
-(def %message-queue (async/chan 1))
+(def %message-queue (async/chan))
 
 (defn render []
   (def %textarea (doto (TextArea.)
-                 (.setFont f/LOG-FONT)
-                 (.setPrefRowCount 2)
-                 (.setFocusTraversable false)
-                 (.setWrapText true)
-                 (.setMouseTransparent true)
-                 (.setEditable false)))
+                   (.setFont f/LOG-FONT)
+                   (.setStyle "-fx-text-fill: #88AAAA;")
+                   (.setFocusTraversable false)
+                   (.setWrapText true)
+                   (.setMouseTransparent true)
+                   (.setEditable false)))
   %textarea)
 
-(def ^:const typing-speed-per-sentence 500)
+(def ^:const typing-speed-per-sentence 1000)
 
-(defn write [messages]
-  (let [letters (mapcat (partial map str) messages)
-        speed (/ typing-speed-per-sentence (count letters))]
-    (async/go (doseq [c letters]
-                (println c)
-                (async/>! %message-queue [c speed])))))
+(def line-counter (atom 0))
+
 (defn writeln [& messages]
-  (write (concat messages ["\n"])))
+  (swap! line-counter inc)
+  (async/go (async/>! %message-queue messages)))
 
-(defn flash-a-letter [c]
-  (.appendText %textarea c))
+(defn write-a-letter [c]
+  (fx/run-later (.appendText %textarea c)))
 
 (defn start []
   (async/go-loop []
-    (let [[c typing-speed] (async/<! %message-queue)]
-      (fx/run-later (flash-a-letter c))
-      (async/<! (async/timeout typing-speed))
+    (let [messages (async/<! %message-queue)
+          message (apply str messages)
+          typing-speed (/ typing-speed-per-sentence (count message))]
+      (when (> @line-counter 400)
+        (reset! line-counter 0)
+        (fx/run-later (.clear %textarea)))
+      (doseq [c message]
+        (write-a-letter (str c))
+        (async/<! (async/timeout typing-speed)))
+      (write-a-letter "\n")
       (recur))))

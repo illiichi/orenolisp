@@ -50,4 +50,5 @@
             :taps (get (str "n-" node-id)) deref)))
 
 (defn stop-sound [exp-id]
+  (log/writeln "sound is stopping... " exp-id)
   (l4/stop (keyword exp-id)))

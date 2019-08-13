@@ -102,6 +102,7 @@
    (fn [editor]
      (let [v (some->> (ed/get-content editor) :value)]
        (when-let [sexp (->> v (get table))]
+         (log/writeln "completed: " sexp)
          (->> (conv/convert-sexp->editor sexp)
               (ed/add-editor editor :self)))))))
 
@@ -289,3 +290,8 @@
   (let [exp-id (:current-exp-id state)]
     (sc/stop-sound exp-id))
   state)
+
+(defn log [message]
+  (fn [state]
+    (log/writeln message)
+    state))
