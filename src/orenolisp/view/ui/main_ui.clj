@@ -4,11 +4,12 @@
             [orenolisp.view.ui.component.context-display :as context-display]
             [orenolisp.view.ui.component.viewport :as viewport]
             [orenolisp.view.ui.component.logscreen :as logscreen]
+            [orenolisp.view.ui.component.window-indicator :as w-indicator]
             [clojure.core.async :as async])
   (:import
    (javafx.application Application)
    (javafx.stage Stage StageStyle)
-   (javafx.geometry Insets)
+   (javafx.geometry Insets Pos)
    (javafx.scene Scene Group)
    (javafx.scene.transform Scale)
    (javafx.scene.layout Pane StackPane BorderPane GridPane ColumnConstraints Priority)))
@@ -80,6 +81,7 @@
   (doto (BorderPane.)
     (.setCenter (doto (StackPane.)
                   (fx/add-child (logscreen/render))
-                  (fx/add-child (viewport/render))))
+                  (fx/add-child (viewport/render))
+                  (fx/add-child (w-indicator/render))))
     (.setBottom (create-bottom (typed-history/create-control)
                                (context-display/create)))))

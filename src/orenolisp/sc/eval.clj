@@ -36,10 +36,11 @@
 (defn get-exps-vol [exp-ids]
   (let [lines @llll.engine.engine/%lines]
     (->> exp-ids
-         (map (fn [id]
-                {id (-> (get lines (keyword id))
-                        :state :node-holder deref
-                        :node :taps (get "out") deref)}))
+         (keep (fn [id]
+                 (when-let [v (some-> (get lines (keyword id))
+                                      :state :node-holder deref
+                                      :node :taps (get "out") deref)]
+                   {id v})))
          (into {}))))
 
 (defn get-node-value [exp-id node-id]

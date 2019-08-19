@@ -12,7 +12,8 @@
             [orenolisp.sc.builder :as sb]
             [orenolisp.watcher.engine :as we]
             [orenolisp.view.ui.component.animations :as anim]
-            [orenolisp.view.ui.component.logscreen :as log])
+            [orenolisp.view.ui.component.logscreen :as log]
+            [orenolisp.watcher.volume-watcher :as volume-watcher])
   (:refer-clojure :exclude [slurp]))
 
 (defn set-temporary-keymap [description keymap]
@@ -162,6 +163,7 @@
                                      (get-in [:layout :layer-no]))
                              0)
         new-win (fx/run-now (wc/open-new-window exp-id current-layer-no new-layout))]
+    (volume-watcher/register expression)
     (-> state
         (update :windows #(assoc % exp-id new-win))
         (update :expressions #(assoc % exp-id expression))

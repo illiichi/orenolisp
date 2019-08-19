@@ -20,7 +20,7 @@
   (let [sexp (conv/convert-editor->sexp editor)]
     `(ld/defsound ~(exp-id->sym exp-id) ~(build-option sc-option)
        (let [snd# ~sexp]
-         (overtone.sc.cgens.tap/tap "out" 12 (~'overtone.core/amplitude:kr snd#))
+         (overtone.sc.cgens.tap/tap "out" 12 (~'overtone.core/amplitude:ar snd#))
          snd#))))
 
 (defn exp->control-vol [{:keys [exp-id]} param]

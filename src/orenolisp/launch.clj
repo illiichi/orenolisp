@@ -15,6 +15,7 @@
             [orenolisp.view.controller.main-controller :as mc]
             [orenolisp.view.ui.component.logscreen :as log]
             [orenolisp.view.controller.window-controller :as wc]
+            [orenolisp.watcher.volume-watcher :as vw]
             [clojure.core.async :as async])
   (:import (javafx.scene.paint Color)
            (javafx.scene.canvas Canvas)
@@ -28,4 +29,5 @@
     (we/start mc/event-ch)
     (mc/start-loop (async/pipe ki/keyboard-ch mc/event-ch))
     (log/start)
+    (vw/start)
     (viewport/move-center))

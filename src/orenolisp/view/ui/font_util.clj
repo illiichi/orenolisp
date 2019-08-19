@@ -11,6 +11,9 @@
 (def METER-FONT (Font/loadFont "file:resources/Roboto-Light.ttf" 12.0))
 (def METER-TYPE-FONT (Font/loadFont "file:resources/Orbitron-Bold.ttf" 10.0))
 
+(def WINDOW-INDICATOR-LARGE-FONT (Font/loadFont "file:resources/Orbitron-Bold.ttf" 18.0))
+(def WINDOW-INDICATOR-FONT (Font/loadFont "file:resources/Orbitron-Regular.ttf" 12.0))
+
 
 (defn- font-size [font]
   (-> (doto (Text.)
