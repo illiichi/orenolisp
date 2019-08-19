@@ -56,10 +56,12 @@
 
 (defn calcurate-scroll-position-to-focus [component]
   (let [[cx cy] (fx/ui-center component)
-        sx (- cx (* 1/2 (.getWidth %scroll-pane)))
-        sy (- cy (* 1/2 (.getHeight %scroll-pane)))]
-    [(/ sx (- v-width (.getWidth %scroll-pane)))
-     (/ sy (- v-height (.getHeight %scroll-pane)))]))
+        screen-width (.getWidth %scroll-pane)
+        screen-height (.getHeight %scroll-pane)
+        sx (- cx (* 3/8 screen-width))
+        sy (- cy (* 1/2 screen-height))]
+    [(/ sx (- v-width screen-width))
+     (/ sy (- v-height screen-height))]))
 
 (defn- with-layer [layer-no f]
   (let [layer (nth %layers layer-no)]

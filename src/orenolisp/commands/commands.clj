@@ -169,9 +169,9 @@
         (update :expressions #(assoc % exp-id expression))
         (assoc :current-exp-id exp-id))))
 
-(def prepared-locations (atom (cycle [[0.55 0.8 0.5 0.5]
-                                      [0.55 0.8 0.825 0.5]
-                                      [0.55 0.8 0.175 0.5]])))
+(def prepared-locations (atom (cycle [[0.5 0.8 0.45 0.5]
+                                      [0.5 0.8 0.725 0.5]
+                                      [0.5 0.8 0.175 0.5]])))
 (defn- pop-location []
   (let [args (apply viewport/location-by-ratio (first (swap! prepared-locations rest)))]
     (-> (apply wc/->layout 0 args)

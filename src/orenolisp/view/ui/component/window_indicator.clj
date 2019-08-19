@@ -4,6 +4,7 @@
   (:import (javafx.scene.canvas Canvas)
            [javafx.scene.effect Bloom]
            (javafx.geometry Insets)
+           (javafx.scene.control ScrollPane)
            (javafx.scene.paint Color)
            (javafx.scene.layout BorderPane VBox)))
 
@@ -83,4 +84,5 @@
 (defn render []
   (def %pane (VBox.))
   (doto (BorderPane.)
-    (.setRight %pane)))
+    (.setRight (doto (ScrollPane.)
+                 (.setContent %pane)))))
