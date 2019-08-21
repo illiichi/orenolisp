@@ -1,9 +1,8 @@
 (ns orenolisp.view.ui.component.logscreen
   (:require [orenolisp.view.ui.fx-util :as fx]
-            [orenolisp.view.ui.font-util :as f]
+            [orenolisp.view.ui.theme :as theme]
             [clojure.core.async :as async])
   (:import (javafx.scene.control TextArea)
-           (javafx.scene.paint Color)
            (javafx.scene.layout StackPane Pane)))
 
 (declare %textarea)
@@ -12,8 +11,8 @@
 
 (defn render []
   (def %textarea (doto (TextArea.)
-                   (.setFont f/LOG-FONT)
-                   (.setStyle "-fx-text-fill: #88AAAA;")
+                   (.setFont theme/log-font)
+                   (.setStyle (str "-fx-text-fill: " theme/style-log-color ";"))
                    (.setFocusTraversable false)
                    (.setWrapText true)
                    (.setMouseTransparent true)

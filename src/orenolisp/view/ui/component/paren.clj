@@ -1,8 +1,8 @@
 (ns orenolisp.view.ui.component.paren
   (:require [orenolisp.view.ui.component.animations :as anim]
-            [orenolisp.view.ui.fx-util :as fx])
-  (:import (javafx.scene.paint Color)
-           (javafx.scene.canvas Canvas)))
+            [orenolisp.view.ui.fx-util :as fx]
+            [orenolisp.view.ui.theme :as theme])
+  (:import (javafx.scene.canvas Canvas)))
 
 (defn create-node []
   (Canvas.))
@@ -11,7 +11,7 @@
 (def padding-x 2)
 (def padding-y 2)
 (def line-width 1)
-(def line-color (Color/web "#AACCFF"))
+
 
 (defn render [body {:keys [focus? mark? size]}]
   (let [{:keys [w h]} size
@@ -29,12 +29,12 @@
       (.setHeight h))
     (doto gc
       (.clearRect 0 0 w h)
-      (.setStroke (if focus? Color/WHITE line-color))
+      (.setStroke (if focus? theme/focus-paren-color theme/primary-color))
       (.setLineWidth (if focus? (* 3 line-width) line-width))
       (fx/stroke-polyline [[x1 y1-2] [x1-2 y1] [x1-2 y2] [x1 y2-2]])
       (fx/stroke-polyline [[x2 y1-2] [x2-2 y1] [x2-2 y2] [x2 y2-2]]))
     (when mark? (doto gc
-                  (.setFill (Color/web "#8888FF22"))
+                  (.setFill theme/mark-paren-backcolor)
                   (fx/fill-polyline [[x1 y1-2] [x1-2 y1] [x1-2 y2] [x1 y2-2]
                                      [x2 y2-2] [x2-2 y2] [x2-2 y1] [x2 y1-2]])))
 
@@ -42,7 +42,7 @@
       (.setEffect body (anim/drop-shadow 255 255 255 0.3 0 0 15 0.8))
       (doto gc
         (.setLineWidth 1)
-        (.setStroke (Color/web "#AAAAAAAA"))
+        (.setStroke theme/focus-paren-border-color)
         (.strokeLine x1 y1-2 x2 y1-2)
         (.strokeLine x1 y2-2 x2 y2-2)))))
 

@@ -3,23 +3,24 @@
             [orenolisp.view.layout.flow-layout :as fl]
             [orenolisp.view.layout.fix-layout :as fix]
             [orenolisp.util :as ut]
-            [orenolisp.view.ui.font-util :as f]))
+            [orenolisp.view.ui.theme :as theme]))
 
 (defn- calcurate-string-size [string]
-  (l/->Size (* f/LABEL-FONT-WIDTH (count string))
-            (+ 8 f/LABEL-FONT-HEIGHT)))
+  (l/->Size (* theme/label-font-width (count string))
+            (+ 8 theme/label-font-height)))
 (defn- calcurate-in-ugen-size [{:keys [exp-id]}]
-  (l/->Size (+ (* 3 12) f/PORTAL-FONT-HEIGHT (* f/PORTAL-FONT-WIDTH (count exp-id)))
-            (+ (* 2 8) f/PORTAL-FONT-HEIGHT)))
+  (l/->Size (+ (* 3 12) theme/in-ugen-font-height
+               (* theme/in-ugen-font-width (count exp-id)))
+            (+ (* 2 8) theme/in-ugen-font-height)))
 
 (defn build-size-or-option [{:keys [type value] :as m}]
   (case type
     :ident (calcurate-string-size value)
     :in    (calcurate-in-ugen-size m)
     :gauge (fix/->FixLayoutOption 5 0 [[32 5] [15 5] [15 15]])
-    :paren (fl/->FlowOption true 10 0 5 2 f/LABEL-FONT-WIDTH f/LABEL-FONT-HEIGHT)
-    :newline (l/->Size-newline 0 f/LABEL-FONT-HEIGHT)
-    :vector (fl/->FlowOption false 8 0 5 2 f/LABEL-FONT-WIDTH f/LABEL-FONT-HEIGHT)
+    :paren (fl/->FlowOption true 10 0 5 2 theme/label-font-width theme/label-font-height)
+    :newline (l/->Size-newline 0 theme/label-font-height)
+    :vector (fl/->FlowOption false 8 0 5 2 theme/label-font-width theme/label-font-height)
     (ut/error "unknown type" type m)))
 
 

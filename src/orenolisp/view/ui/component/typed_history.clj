@@ -1,21 +1,20 @@
 (ns orenolisp.view.ui.component.typed-history
   (:require [orenolisp.view.ui.fx-util :as fx]
-            [orenolisp.view.ui.font-util :as f])
+            [orenolisp.view.ui.theme :as theme])
   (:import (javafx.scene.control TextArea)
-           (javafx.scene.paint Color)
            (javafx.scene.layout StackPane Pane)))
 
 (declare %key-history-control)
 
 (defn create-control []
   (let [con (doto (TextArea.)
-              (.setFont f/TYPING-LOG-FONT)
+              (.setFont theme/typing-log-font)
               (.setPrefRowCount 2)
               (.setFocusTraversable false)
               (.setWrapText true)
               (.setMouseTransparent true)
               (.setEditable false)
-              (.setStyle (str "-fx-border-color: #00CCFF;"
+              (.setStyle (str "-fx-border-color: " theme/style-primary-color ";"
                               "-fx-padding: 0px 2px 0 2px;"
                               "-fx-border-width: 1px 1px 0 0;")))
         container (doto (StackPane.)

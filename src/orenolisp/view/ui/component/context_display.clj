@@ -1,19 +1,18 @@
 (ns orenolisp.view.ui.component.context-display
   (:require [orenolisp.view.ui.fx-util :as fx]
-            [orenolisp.view.ui.font-util :as f])
-  (:import (javafx.scene.paint Color)
-           (javafx.scene.text Text)
+            [orenolisp.view.ui.theme :as theme])
+  (:import (javafx.scene.text Text)
            (javafx.scene.layout GridPane StackPane ColumnConstraints Pane)))
 
 (declare %canvas)
 
 (defn- render-border [gc w h]
   (doto gc
-    (.setStroke (Color/web "#00CCFF"))
-    (.setFill (Color/web "#00CCFF"))
+    (.setStroke theme/primary-color)
+    (.setFill theme/primary-color)
     (.setLineWidth 2)
     (fx/stroke-polyline [[0 12] [12 0] [w 0]])
-    (.setFont f/SMALL-LABEL-FONT)
+    (.setFont theme/small-label-font)
     (.fillText "doing" 24 18)
     (.fillText "target" (+ 24 (/ w 2)) 18)))
 
@@ -26,8 +25,8 @@
         h (.getHeight canvas)]
     (doto (.getGraphicsContext2D canvas)
       (.clearRect 22 24 w h)
-      (.setFont f/CONTEXT-FONT)
-      (.setFill (Color/web "#00CCFF"))
+      (.setFill theme/primary-color)
+      (.setFont theme/context-font)
       (.fillText doing-msg 24 (- h 10))
       (.fillText in-msg (+ 24 (/ w 2)) (- h 10)))))
 

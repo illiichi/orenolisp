@@ -1,11 +1,10 @@
 (ns orenolisp.view.ui.component.window-indicator
   (:require [orenolisp.view.ui.fx-util :as fx]
-            [orenolisp.view.ui.font-util :as f])
+            [orenolisp.view.ui.theme :as theme])
   (:import (javafx.scene.canvas Canvas)
            [javafx.scene.effect Bloom]
            (javafx.geometry Insets)
            (javafx.scene.control ScrollPane)
-           (javafx.scene.paint Color)
            (javafx.scene.layout BorderPane VBox)))
 
 (declare %pane)
@@ -15,8 +14,6 @@
 (def window-height 120)
 (def window-margin 20)
 (def padding 8)
-(def line-color (Color/web "#AACCFF"))
-(def BACKGROUND-COLOR (Color/web "#001122AA"))
 
 (defn- draw-background [gc x y w h]
   (doto gc
@@ -28,12 +25,12 @@
         y (+ 32 24 24 24 -12)
         width (* 1/20 (- window-width (+ x padding)))]
     (doto gc
-      (.setFill BACKGROUND-COLOR)
+      (.setFill theme/window-backcolor)
       (draw-background (+ x (* width 0) 2) y
                        (- window-width (+ x padding)) (- 24 (* 2 2)))
       (draw-background (- window-width (+ (* 5 7) padding) ) (+ 32 24 -12)
                        (+ (* 5 7)) 24)
-      (.setFill (Color/web "FFFFFF"))
+      (.setFill theme/window-indicator-text-color)
       (.fillText (if vol "ON" "OFF") (- window-width (+ (* 5 7) padding)) (+ 32 24)))
     (doseq [i (range 0 (int (* 20 (min 1 (or vol 0)))))]
       (doto gc
@@ -43,15 +40,15 @@
 
 (defn- draw-window [gc {:keys [exp-id rate num-ch]}]
   (doto gc
-    (.setStroke line-color)
+    (.setStroke theme/primary-color)
     (.setLineWidth 1)
-    (.setFill BACKGROUND-COLOR)
+    (.setFill theme/window-backcolor)
     (.fillRect 0 0 window-width window-height)
-    (.setFill (Color/web "FFFFFF"))
+    (.setFill theme/window-indicator-text-color)
     (.strokeRect 0 0 window-width window-height)
-    (.setFont f/WINDOW-INDICATOR-LARGE-FONT)
+    (.setFont theme/window-indicator-large-font)
     (.fillText exp-id padding 32)
-    (.setFont f/WINDOW-INDICATOR-FONT)
+    (.setFont theme/window-indicator-font)
     (.fillText "status:" (- window-width (+ (* 12 7) padding)) (+ 32 24))
     (.fillText "channels:" padding (+ 32 24))
     (.fillText (str num-ch) (+ (* 10 7) padding) (+ 32 24))

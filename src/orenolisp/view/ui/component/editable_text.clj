@@ -1,25 +1,23 @@
 (ns orenolisp.view.ui.component.editable-text
-  (:require [orenolisp.view.ui.font-util :as f]
+  (:require [orenolisp.view.ui.theme :as theme]
             [orenolisp.view.ui.component.animations :as anim])
   (:import (javafx.scene.paint Color)
            (javafx.scene.canvas Canvas)
            [javafx.scene.effect ColorAdjust Glow]))
 
-(def ^:const LINE-WIDTH 2)
+(def ^:const line-width 2)
 
 (defn create-node []
   (doto (Canvas.)
-    (.setHeight (+ 8 f/LABEL-FONT-HEIGHT))))
+    (.setHeight (+ 8 theme/label-font-height))))
 
 (defn- draw-caret [gc position total-width]
   (when position
     (let [caret-x (min total-width
-                       (* f/LABEL-FONT-WIDTH position))]
+                       (* theme/label-font-width position))]
       (doto gc
-        (.setLineWidth LINE-WIDTH)
-        (.strokeLine caret-x 6 caret-x (+ f/LABEL-FONT-HEIGHT 2))))))
-(def COLOR-IDLE (Color/web "#CCCCFF"))
-(def COLOR-TYPING (Color/web "#FFFFFF"))
+        (.setLineWidth line-width)
+        (.strokeLine caret-x 6 caret-x (+ theme/label-font-height 2))))))
 
 (def focus-effect
   (anim/blend [(doto (ColorAdjust.)
@@ -34,33 +32,31 @@
     (do
       (.setWidth pane 6)
       (doto (.getGraphicsContext2D pane)
-        (.clearRect 0 0 6 f/LABEL-FONT-HEIGHT)
-        (.setFill (if position Color/WHITE Color/RED))
-        (.setStroke (if position Color/WHITE Color/RED))
+        (.clearRect 0 0 6 theme/label-font-height)
+        (.setFill (if position theme/caret-color theme/empty-caret-color))
+        (.setStroke (if position theme/caret-color theme/empty-caret-color))
         (draw-caret (or position 0) 6)))
 
     (let [gc (.getGraphicsContext2D pane)
-          padding-x (+ LINE-WIDTH -3)
-          width (+ padding-x (* f/LABEL-FONT-WIDTH (count value)))
-          height (+ 8 f/LABEL-FONT-HEIGHT)
+          padding-x (+ line-width -3)
+          width (+ padding-x (* theme/label-font-width (count value)))
+          height (+ 8 theme/label-font-height)
           color (cond
-                  position COLOR-TYPING
-                  focus? COLOR-TYPING
-                  mark? Color/BLACK
-                  true COLOR-IDLE)]
-      (.setWidth pane (+ width LINE-WIDTH))
-      (.clearRect gc 0 0 (+ width LINE-WIDTH) height)
-      ;; (.setStroke gc Color/WHITE)
-      ;; (.strokeRect gc 0 0 width height)
+                  position theme/focus-text-color
+                  focus? theme/focus-text-color
+                  mark? theme/mark-text-color
+                  true theme/unfocus-text-color)]
+      (.setWidth pane (+ width line-width))
+      (.clearRect gc 0 0 (+ width line-width) height)
       (when mark?
         (doto gc
-          (.setFill (Color/web "#AAAAFFAA"))
+          (.setFill theme/mark-text-backcolor)
           (.fillRoundRect 0 0 width height 20 10)))
       (doto gc
         (.setStroke color)
         (.setFill color)
-        (.setFont f/LABEL-FONT)
-        (.fillText value padding-x f/LABEL-FONT-HEIGHT)
+        (.setFont theme/label-font)
+        (.fillText value padding-x theme/label-font-height)
         (draw-caret position width))
       ))
   pane)

@@ -1,5 +1,6 @@
 (ns orenolisp.view.ui.component.vector
   (:require [orenolisp.view.ui.fx-util :as fx]
+            [orenolisp.view.ui.theme :as theme]
             [orenolisp.view.ui.component.animations :as anim])
   (:import (javafx.scene.paint Color)
            (javafx.scene.shape Rectangle)))
@@ -14,7 +15,7 @@
 (defn render [body {:keys [focus? mark? size]}]
   (doto body
     (.setEffect (when focus? focus-effect))
-    (.setStroke (if focus? (Color/web "#FFFFFF") (Color/web "#8888AA88")))
+    (.setStroke (if focus? theme/focus-vector-color theme/unfocus-vector-color))
     (.setWidth (:w size))
     (.setHeight (:h size))))
 
