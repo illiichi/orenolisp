@@ -20,6 +20,14 @@
     (.clearRect x y w h)
     (.fillRect x y w h)))
 
+(defn- calcurate-volume-level [vol]
+  (let [min-value 1e-3
+        m (* -1 (Math/log min-value))]
+    (-> (or vol 0) (min 1) (max min-value)
+        Math/log
+        (+ m) (/ m)
+        (* 20) int)))
+
 (defn- draw-volume [gc vol]
   (let [x (+ (* 9 7) (* 2 padding))
         y (+ 32 24 24 24 -12)
@@ -32,7 +40,7 @@
                        (+ (* 5 7)) 24)
       (.setFill theme/window-indicator-text-color)
       (.fillText (if vol "ON" "OFF") (- window-width (+ (* 5 7) padding)) (+ 32 24)))
-    (doseq [i (range 0 (int (* 20 (min 1 (or vol 0)))))]
+    (doseq [i (range 0 (calcurate-volume-level vol))]
       (doto gc
         (.fillRect (+ x (* width i) 2) y
                    (- width (* 2 2))
