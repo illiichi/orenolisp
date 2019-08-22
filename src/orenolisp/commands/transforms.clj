@@ -85,3 +85,12 @@
             (ed/add-editor :parent parent-editor)
             (ed/move [:child :right :right :right])
             (ed/transport :right threading-node-id))))
+
+(defn iterate-multiply [editor]
+  (let [parent-editor (-> '(iterate (fn [x] (* x)))
+                          conv/convert-sexp->editor
+                          (ed/move :root))]
+    (some-> editor
+            (ed/add-editor :parent parent-editor)
+            (ed/move [:child :right :child :right :right :child :right])
+            (ed/add :right (form/input-ident)))))

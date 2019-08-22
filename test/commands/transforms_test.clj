@@ -58,3 +58,13 @@
     (is (ed/check-consistency nil editor))
     (is (= (conv/convert-editor->sexp editor)
            '(-> xxx (let [x (+ 1 2 3)] (f x y z)) zzz)))))
+
+(deftest iterate-multiply
+  (let [sexp '(-> xxx 1 zzz)
+        editor (-> (conv/convert-sexp->editor sexp)
+                   (ed/move [:root :child :right :right])
+                   (trans/iterate-multiply)
+                   (ed/edit #(tx/insert-char % "3/2")))]
+    (is (ed/check-consistency nil editor))
+    (is (= (conv/convert-editor->sexp editor)
+           '(-> xxx (iterate (fn [x] (* x 3/2)) 1) zzz)))))

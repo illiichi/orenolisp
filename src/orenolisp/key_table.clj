@@ -99,7 +99,10 @@
                (cmd/log "completed: range transformation")]
    {:char \l} [(cmd/window-command trans/wrap-by-line)
                (cmd/log "completed: gauge transformation")
-               (cmd/register-watcher watchers/create-gauge-watcher)]})
+               (cmd/register-watcher watchers/create-gauge-watcher)]
+   {:char \*} [(cmd/window-command trans/iterate-multiply)
+               (cmd/log "completed: iterate transformation")
+               cmd/switch-to-typing-mode]})
 
 (def paren-selecting-keymap
   (merge
