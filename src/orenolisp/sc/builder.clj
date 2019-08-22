@@ -19,9 +19,15 @@
 (defn exp->sexp [{:keys [exp-id editor sc-option]} ]
   (let [sexp (conv/convert-editor->sexp editor)]
     `(ld/defsound ~(exp-id->sym exp-id) ~(build-option sc-option)
-       (let [snd# ~sexp]
-         (overtone.sc.cgens.tap/tap "out" 12 (~'overtone.core/amplitude:ar snd#))
-         snd#))))
+       ~(case (:rate sc-option)
+          :audio
+          `(let [snd# ~sexp]
+             (overtone.sc.cgens.tap/tap "out" 12 (~'a2k (~'overtone.core/amplitude:ar snd#)))
+             snd#)
+          :control
+          `(let [snd# ~sexp]
+             (overtone.sc.cgens.tap/tap "out" 12 snd#)
+             snd#)))))
 
 (defn exp->control-vol [{:keys [exp-id]} param]
   `(lc/control ~(exp-id->keyword exp-id) :vol ~param))
