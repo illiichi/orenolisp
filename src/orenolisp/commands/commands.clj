@@ -125,8 +125,13 @@
 (defn- add-digit [n v f]
   (cond
     (= v 0) (f 0 (Math/pow 10 (* -1 n)))
-    (number? v) (let [digit (Math/pow 10 (- (int (Math/log10 v)) n))]
-                  (f v (if (>= digit 1) (int digit) digit)))
+    (number? v) (let [big-v (bigdec v)
+                      digit (Math/pow 10 (- (int (Math/floor (Math/log10 v))) n))]
+                  (println v
+                           digit
+                           big-v)
+                  (if (and (>= digit 1) (= (.scale big-v) 0)) (f v (int digit))
+                      (double (f big-v (bigdec digit)))))
     true nil))
 
 (defn calcurate-n-digit [n f]
