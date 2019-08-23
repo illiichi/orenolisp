@@ -22,7 +22,9 @@
        ~(case (:rate sc-option)
           :audio
           `(let [snd# ~sexp]
-             (overtone.sc.cgens.tap/tap "out" 12 (~'a2k (~'overtone.core/amplitude:ar snd#)))
+             (overtone.sc.cgens.tap/tap
+              "out" 12 (overtone.core/a2k (overtone.core/mix
+                                           (~'overtone.core/amplitude:ar snd#))))
              snd#)
           :control
           `(let [snd# ~sexp]
