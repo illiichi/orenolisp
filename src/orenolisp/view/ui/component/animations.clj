@@ -139,8 +139,11 @@
                                                         [brigt-p 0.8]
                                                         [opacity-p 1])
                                          (fx/->KeyFrame 220 [brigt-p 0])]))
-       (fx/on-animation-finished (fn [_]
-                                   (.setEffect ui org-effect)))))))
+       (fx/on-animation-finished
+        (fn [_]
+          ;; fixme: ad-hoc implementation
+          (when (not (nil? (.getEffect ui)))
+            (.setEffect ui org-effect))))))))
 
 (defn white-out [ui]
   (let [opacity-p (.opacityProperty ui)
