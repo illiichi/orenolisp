@@ -131,6 +131,7 @@
 
 (defn focus? [{:keys [current-id]} target-id] (= target-id current-id))
 (defn get-marks [{:keys [marks]}] marks)
+(defn has-mark? [editor] (not (empty? (get-marks editor))))
 (defn marked? [{:keys [marks]} target-id] (some #(= target-id %) marks))
 (defn mark
   ([{:keys [current-id] :as editor}] (mark editor current-id))
@@ -210,3 +211,19 @@
 (defn print-editor [editor]
   (check-consistency (fn [_ content] content) editor))
 
+
+(defn find-by-moving [editor move-func pred-func]
+  (loop [editor editor]
+    (if (pred-func editor)
+      editor
+      (when-let [new-editor (move-func editor)]
+        (when (not= (get-id new-editor :self) (get-id editor :self))
+          (recur new-editor))))))
+
+(defn find-by-first-element [editor move-func pred-func]
+  (find-by-moving
+   editor move-func
+   (fn [editor] (->> (get-children-ids editor)
+                     first
+                     (get-content editor)
+                     pred-func))))

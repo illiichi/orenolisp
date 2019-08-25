@@ -81,28 +81,32 @@
 (def extraction-keymap
   {{:char \a} (cmd/extract-as-in-ugen :audio)
    {:char \k} (cmd/extract-as-in-ugen :control)})
-(def transformation-keymap
-  {{:char \m} [(cmd/window-command trans/wrap-by-map)
+(def common-transformation-keymap
+  {{:char \m} [(cmd/window-command trans/transform-to-map)
                (cmd/log "completed: map transformation")
                cmd/switch-to-typing-mode]
-   {:char \r} [(cmd/window-command trans/wrap-by-reduce)
-               (cmd/log "completed: reduce transformation")]
-   {:char \t} (cmd/window-command trans/threading)
-   {:char \s} [(cmd/window-command trans/append-splay-tanh)
-               (cmd/log "completed: threading and splay")]
    {:char \b} [(cmd/window-command trans/let-binding)
                (cmd/log "completed: let bindig")
                cmd/switch-to-typing-mode]})
+(def transformation-keymap
+  (merge
+   common-transformation-keymap
+   {{:char \r} [(cmd/window-command trans/wrap-by-reduce)
+                (cmd/log "completed: reduce transformation")]
+    {:char \t} (cmd/window-command trans/threading)
+    {:char \s} [(cmd/window-command trans/append-splay-tanh)
+                (cmd/log "completed: threading and splay")]}))
 
 (def transformation-ident-keymap
-  {{:char \r} [(cmd/window-command trans/wrap-by-range)
-               (cmd/log "completed: range transformation")]
-   {:char \l} [(cmd/window-command trans/wrap-by-line)
-               (cmd/log "completed: gauge transformation")
-               (cmd/register-watcher watchers/create-gauge-watcher)]
-   {:char \*} [(cmd/window-command trans/iterate-multiply)
-               (cmd/log "completed: iterate transformation")
-               cmd/switch-to-typing-mode]})
+  (merge common-transformation-keymap
+         {{:char \r} [(cmd/window-command trans/wrap-by-range)
+                      (cmd/log "completed: range transformation")]
+          {:char \l} [(cmd/window-command trans/wrap-by-line)
+                      (cmd/log "completed: gauge transformation")
+                      (cmd/register-watcher watchers/create-gauge-watcher)]
+          {:char \*} [(cmd/window-command trans/iterate-multiply)
+                      (cmd/log "completed: iterate transformation")
+                      cmd/switch-to-typing-mode]}))
 
 (def paren-selecting-keymap
   (merge

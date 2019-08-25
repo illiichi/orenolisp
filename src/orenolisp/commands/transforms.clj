@@ -3,7 +3,11 @@
             [orenolisp.model.forms :as form]
             [orenolisp.model.editor :as ed]))
 
-(defn wrap-by-map [editor]
+(defn- find-nearest-ident [editor ident-value]
+  (ed/find-by-first-element editor #(ed/move % :parent)
+                            #(= (:value %) ident-value)))
+
+(defn- wrap-by-map [editor]
   (let [parent-editor (-> '(map (fn [___]) [___])
                           conv/convert-sexp->editor
                           (ed/move [:root :child :right]))
@@ -15,6 +19,33 @@
                            (-> editor
                                (ed/jump arg-node-id)
                                (ed/swap element-id))))))))
+
+(defn- add-map-arguments [editor]
+  (let [editor-map (find-nearest-ident editor "map")
+        map-ident-id (ed/get-id editor-map :child)
+        target-id (ed/get-id editor :self)
+        end-of-arg (-> editor-map
+                       (ed/move [:child :right :child :right :child :right])
+                       (ed/move-most :right)
+                       (ed/get-id :self))]
+    (-> editor
+        (ed/jump end-of-arg)
+        (ed/add :right (form/input-ident))
+        (ed/add-as-multiple-cursors)
+        (ed/move [:parent :parent])
+        (ed/move-most :right)
+        (ed/add :right (form/vector))
+        (ed/add :child (form/input-ident))
+        (ed/add-as-multiple-cursors)
+        (ed/swap target-id)
+        (ed/jump map-ident-id)
+        (ed/move-most :right)
+        (ed/move :child))))
+
+(defn transform-to-map [editor]
+  (if (ed/has-mark? editor)
+    (wrap-by-map editor)
+    (add-map-arguments editor)))
 
 (defn wrap-by-reduce [editor]
   (let [parent-editor (-> '(u/reduce-> (fn [acc x]) [x])
@@ -62,8 +93,7 @@
         ;; fixme when node-id has been changed
         (as-> editor (ed/edit editor #(assoc % :node-id (ed/get-id editor :self)))))))
 
-
-(defn let-binding [editor]
+(defn- let-binding-for-new [editor]
   (let [parent-editor (-> '(let [___ ___])
                           conv/convert-sexp->editor
                           (ed/move :root))
@@ -76,6 +106,28 @@
                                    (ed/jump arg-node-id)
                                    (ed/swap func-arg-id)
                                    (ed/move :left))))))))
+
+(defn- let-binding-for-add [editor]
+  (when-let [editor-let (find-nearest-ident editor "let")]
+    (let [end-of-binding (-> editor-let
+                             (ed/move [:child :right :child])
+                             (ed/move-most :right)
+                             (ed/get-id :self))
+          target-id (ed/get-id editor :self)]
+      (-> editor
+          (ed/jump end-of-binding)
+          (ed/add :right (form/new-line))
+          (ed/add :right (form/input-ident))
+          (ed/add-as-multiple-cursors)
+          (ed/add :right (form/input-ident))
+          (ed/add-as-multiple-cursors)
+          (ed/swap target-id)))))
+
+(defn let-binding [editor]
+  (if (ed/has-mark? editor)
+    (let-binding-for-new editor)
+    (let-binding-for-add editor)))
+
 (defn append-splay-tanh [editor]
   (let [parent-editor (-> '(-> (splay) tanh)
                           conv/convert-sexp->editor

@@ -7,16 +7,27 @@
              [orenolisp.commands.transforms :as trans]))
 
 (deftest wrap-by-map
-  (let [sexp '(xxx (* (f (+ 1 2 3) y z) (g a b)) zzz)
-        editor (-> (conv/convert-sexp->editor sexp)
-                   (ed/move [:root :child :right :child :right :child :right])
-                   (ed/mark)
-                   (ed/move [:root :child :right])
-                   (trans/wrap-by-map)
-                   (ed/edit #(tx/insert-char % "x")))]
-    (is (ed/check-consistency nil editor))
-    (is (= (conv/convert-editor->sexp editor)
-           '(xxx (map (fn [x] (* (f x y z) (g a b))) [(+ 1 2 3)]) zzz)))))
+  (testing "wrap"
+    (let [sexp '(xxx (* (f (+ 1 2 3) y z) (g a b)) zzz)
+          editor (-> (conv/convert-sexp->editor sexp)
+                     (ed/move [:root :child :right :child :right :child :right])
+                     (ed/mark)
+                     (ed/move [:root :child :right])
+                     (trans/transform-to-map)
+                     (ed/edit #(tx/insert-char % "x")))]
+      (is (ed/check-consistency nil editor))
+      (is (= (conv/convert-editor->sexp editor)
+             '(xxx (map (fn [x] (* (f x y z) (g a b))) [(+ 1 2 3)]) zzz)))))
+  (testing "add argument"
+    (let [sexp '(xxx (map (fn [x] (* (f x y z) (g a b))) [(+ 1 2 3)]) zzz)
+          editor (-> (conv/convert-sexp->editor sexp)
+                     (ed/move [:root :child :right :child :right :child :right :right
+                               :child :right :child :right])
+                     (trans/transform-to-map)
+                     (ed/edit #(tx/insert-char % "x2")))]
+      (is (ed/check-consistency nil editor))
+      (is (= (conv/convert-editor->sexp editor)
+             '(xxx (map (fn [x x2] (* (f x2 y z) (g a b))) [(+ 1 2 3)] [x]) zzz))))))
 
 (deftest wrap-by-reduce
   (let [sexp '(-> xxx (f (+ 1 2 3) y z) zzz)
@@ -48,16 +59,31 @@
         '(xxx (u/rg-lin (lf-cub:kr 0.01) (f X y z) (f X y z)) zzz)))))
 
 (deftest let-binding
-  (let [sexp '(-> xxx (f (+ 1 2 3) y z) zzz)
-        editor (-> (conv/convert-sexp->editor sexp)
-                   (ed/move [:root :child :right :right :child :right])
-                   (ed/mark)
-                   (ed/move :parent)
-                   (trans/let-binding)
-                   (ed/edit #(tx/insert-char % "x")))]
-    (is (ed/check-consistency nil editor))
-    (is (= (conv/convert-editor->sexp editor)
-           '(-> xxx (let [x (+ 1 2 3)] (f x y z)) zzz)))))
+  (testing "new let binding"
+    (let [sexp '(-> xxx (f (+ 1 2 3) y z) zzz)
+          editor (-> (conv/convert-sexp->editor sexp)
+                     (ed/move [:root :child :right :right :child :right])
+                     (ed/mark)
+                     (ed/move :parent)
+                     (trans/let-binding)
+                     (ed/edit #(tx/insert-char % "x")))]
+      (is (ed/check-consistency nil editor))
+      (is (= (conv/convert-editor->sexp editor)
+             '(-> xxx (let [x (+ 1 2 3)] (f x y z)) zzz)))))
+  (testing "add binding"
+    (let [sexp '(-> xxx (let [x1 (+ 4 5 6)]
+                          (+ 1 (* 2 3)) y z)
+                    zzz)
+          editor (-> (conv/convert-sexp->editor sexp)
+                     (ed/move [:root :child :right :right :child :right :right
+                               :child :right :right])
+                     (trans/let-binding)
+                     (ed/edit #(tx/insert-char % "x2")))]
+      (is (ed/check-consistency nil editor))
+      (is (= (conv/convert-editor->sexp editor)
+             '(-> xxx (let [x1 (+ 4 5 6)
+                            x2 (* 2 3)]
+                        (+ 1 x2) y z) zzz))))))
 
 (deftest iterate-multiply
   (let [sexp '(-> xxx 1 zzz)
