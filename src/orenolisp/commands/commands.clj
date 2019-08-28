@@ -217,6 +217,20 @@
           (open-window new-exp new-layout)
           refresh))))
 
+(defn- create-below-of-layout [layout]
+  (update-in layout [:position :y] #(+ % (get-in layout [:size :h]) 45)))
+
+(defn copy-window [state]
+  (let [org-window (st/current-window state)
+        org-expression (st/current-expression state)
+        copied-editor (-> (st/current-editor state) ed/copy)
+        new-exp (ec/new-expression copied-editor (:sc-option org-expression))
+        new-layout (create-below-of-layout (:layout org-window))]
+    (sc/set-volume new-exp 1)
+    (-> state
+        (open-window new-exp new-layout)
+        refresh)))
+
 (defn move-window [find-f]
   (fn [state]
     (let [window (st/current-window state)
@@ -278,6 +292,13 @@
                  (wc/layout (st/current-editor state)
                             w
                             (get-in w [:layout :size :w]) true))))
+
+(defn half-window-height [state]
+  (update-in state [:windows (:current-exp-id state)]
+               (fn [w]
+                 (wc/update-window-size w (update (get-in w [:layout :size])
+                                                  :h #(/ % 2))))))
+
 
 (defn open-window-from-in-ugen [state]
   (when-let [next-exp-id (:exp-id (st/current-content state))]

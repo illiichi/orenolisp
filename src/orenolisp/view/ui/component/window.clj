@@ -62,4 +62,4 @@
   (when window
     (doto window
       (.setEffect (doto (ColorAdjust.)
-                    (.setBrightness -0.5))))))
+                    (.setBrightness -0.6))))))
