@@ -23,8 +23,7 @@
           :audio
           `(let [snd# ~sexp]
              (overtone.sc.cgens.tap/tap
-              "out" 12 (overtone.core/a2k (overtone.core/mix
-                                           (~'overtone.core/amplitude:ar snd#))))
+              "out" 12 (overtone.core/a2k (~'overtone.core/amplitude:ar snd#)))
              snd#)
           :control
           `(let [snd# ~sexp]
