@@ -21,12 +21,14 @@
 (defn get-frame-ui [{:keys [win-ui]}] win-ui)
 
 (defn- put-into-viewport [{:keys [win-ui layout]}]
-  (.play (anim/white-in 150 win-ui))
-  (viewport/put-component (:layer-no layout) win-ui))
+  (fx/run-now
+   (.play (anim/white-in 150 win-ui))
+   (viewport/put-component (:layer-no layout) win-ui)))
 
 (defn- draw-frame [{:keys [win-ui exp-id layout]}]
-  (fx/move win-ui (wu/outer-pos (:position layout)))
-  (wu/draw-with-inner-size win-ui exp-id (:size layout)))
+  (fx/run-now
+   (fx/move win-ui (wu/outer-pos (:position layout)))
+   (wu/draw-with-inner-size win-ui exp-id (:size layout))))
 
 (defn update-window-size [window new-size]
   (doto (assoc-in window [:layout :size] new-size)
@@ -39,17 +41,16 @@
     (draw-frame)))
 
 (defn focus [{:keys [layout win-ui]} current-layer-no]
+  (wu/select-window win-ui)
   (viewport/focus current-layer-no (:layer-no layout) win-ui))
+
+(defn unfocus [{:keys [win-ui]}]
+  (wu/unselect-window win-ui))
 
 (defn convert-to-inner-layout [layout]
   (-> layout
       (update :position wu/inner-pos)
       (update :size wu/inner-size)))
-
-(defn open-new-window [exp-id current-layer-no new-layout]
-  (let [window (new-window exp-id new-layout)]
-    (focus window current-layer-no)
-    window))
 
 (defn- create-and-delete-ui [editor layer-no exp-table created-ids deleted-ids]
   (let [new-exps (->> created-ids

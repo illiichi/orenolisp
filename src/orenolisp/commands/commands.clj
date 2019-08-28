@@ -161,11 +161,14 @@
 
 (defn- open-window [state {:keys [exp-id] :as expression} new-layout]
   (log/writeln "open new window:" exp-id)
-  (let [current-layer-no (or (some-> (st/current-window state)
+  (let [current-window (st/current-window state)
+        current-layer-no (or (some-> current-window
                                      (get-in [:layout :layer-no]))
                              0)
-        new-win (fx/run-now (wc/open-new-window exp-id current-layer-no new-layout))]
+        new-win (wc/new-window exp-id new-layout)]
     (volume-watcher/register expression)
+    (wc/unfocus current-window)
+    (wc/focus new-win current-layer-no)
     (-> state
         (update :windows #(assoc % exp-id new-win))
         (update :expressions #(assoc % exp-id expression))
@@ -222,6 +225,7 @@
                        (find-f (:exp-id window)))]
       (when next-id
         (wc/focus (get-in state [:windows next-id]) current-layer-no)
+        (wc/unfocus window)
         (assoc state :current-exp-id next-id)))))
 
 (defmacro no-exception? [& body]
