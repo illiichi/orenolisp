@@ -155,6 +155,7 @@
    "i" 'impulse
    "ln" 'lf-noise0
    "ur" 'u/rotate->
+   "un" 'u/n-range
    "cl" 'clip:ar
    "uf" 'u/eff
    "lp" 'lf-pulse
@@ -163,20 +164,20 @@
    "rd" '(u/reduce-> (fn [acc x] (+ acc)) [])
    "fr" '(free-verb 1 1)
    "in" '(in (l4/sound-bus :exp-1 :out-bus) 2)
-   "ep" '(env-gen (env-perc 0.05 0.5))
+   "ep" '(env-gen (env-perc 0 0.5))
    "eg" '(env-gen (envelope [] []))
    "cheat" '(-> (map (fn [x y]
                        (* (rhpf (white-noise) (* 100 y) 0.4) 256
                           (env-gen (env-perc 1e-6 0.01) (impulse x))))
                      (take 4 (cycle [1 2 3 5 7 9]))
                      (reductions * 1 (cycle [5/2 3/2 4/5 5/11])))
-               splay
-               (u/reduce-> (fn [acc [x y z]]
-                             (+ acc (* (lf-pulse y 0 z) (ringz acc x 0.001))))
-                           [[8000 1/8 1/2] [20 1/12 1/16] [300 1.1 1/8]])
-               (u/reduce-> free-verb [0.1 0.4 0.2])
-               (g-verb 1.1)
-               tanh (* 1/2))
+                splay
+                (u/reduce-> (fn [acc [x y z]]
+                              (+ acc (* (lf-pulse y 0 z) (ringz acc x 0.001))))
+                            [[8000 1/8 1/2] [20 1/12 1/16] [300 1.1 1/8]])
+                (u/reduce-> free-verb [0.1 0.4 0.2])
+                (g-verb 1.1)
+                tanh (* 1/2))
    "cheat3" '(-> (map (fn [freq]
                         (-> (sin-osc freq)
                             (clip:ar -1 (u/sin-r 0.18 -1/2 1))
