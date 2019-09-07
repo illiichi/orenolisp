@@ -26,6 +26,12 @@
   (reduce-kv (fn [acc k v] (assoc acc k (f v)))
              {} m))
 
+(defn filter-value [pred m]
+  (reduce-kv (fn [acc k v] (if (pred v)
+                             (assoc acc k v)
+                             acc))
+             {} m))
+
 (defn find-next-by [pred xs]
   (loop [[x & xs] xs]
     (cond (pred x) (first xs)
