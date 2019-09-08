@@ -83,16 +83,6 @@
 (defn put-components [layer-no components]
   (with-layer layer-no
     #(doseq [component components] (fx/add-child % component))))
-(defn remove-components [components]
-  (doseq [component components]
-    (fx/remove-node component (anim/dissapear component))))
-
-(defn remove-components-quick [container components]
-  (let [comps (set components)
-        it (.iterator (.getChildren container))]
-    (while (.hasNext it)
-      (when (comps (.next it))
-        (.remove it)))))
 
 (defn focus [current-layer-no new-layer-no component]
   (let [[h v] (calcurate-scroll-position-to-focus component)]

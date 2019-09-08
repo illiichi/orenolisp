@@ -1,5 +1,6 @@
 (ns orenolisp.view.ui.component.window
   (:require [orenolisp.view.ui.fx-util :as fx]
+            [orenolisp.view.ui.component.animations :as anim]
             [orenolisp.view.ui.theme :as theme])
   (:import (javafx.scene.text Text)
            (javafx.scene.canvas Canvas)
@@ -9,8 +10,17 @@
 (def ^:const TOP-PADDING 20)
 (def ^:const PADDING 15)
 
+(def inner-top {:x PADDING :y TOP-PADDING})
+
 (defn create []
-  (Canvas.))
+  (doto (StackPane.)
+    (fx/add-child (Canvas.))
+    (fx/add-child (Pane.))))
+
+(defn- canvas [ui]
+  (->> ui (.getChildren) first))
+(defn- container [ui]
+  (->> ui (.getChildren) second))
 
 (def ^:const W 5)
 (defn- render [canvas w h exp-id {:keys [rate playing?]}]
@@ -52,14 +62,30 @@
 (defn draw-with-inner-size [ui exp-id {:keys [w h]}]
   (let [w (min MAX-WIDTH w)
         [required-width required-height] (outer-size w h)]
-    (render ui required-width required-height exp-id {:rate :audio :playing? true})))
+    (render (canvas ui)
+            required-width required-height exp-id {:rate :audio :playing? true})))
 
 (defn select-window [window]
   (when window
-    (doto window
+    (doto (canvas window)
       (.setEffect nil))))
 (defn unselect-window [window]
   (when window
-    (doto window
+    (doto (canvas window)
       (.setEffect (doto (ColorAdjust.)
                     (.setBrightness -0.6))))))
+(defn put-components [ui components]
+  (let [children (-> (container ui)
+                     (.getChildren))]
+    (.addAll children components)))
+
+(defn delete-components [components]
+  (doseq [component components]
+    (fx/remove-node component (anim/dissapear component))))
+
+(defn delete-components-quick [ui components]
+  (let [comps (set components)
+        it (.iterator (.getChildren (container ui)))]
+    (while (.hasNext it)
+      (when (comps (.next it))
+        (.remove it)))))

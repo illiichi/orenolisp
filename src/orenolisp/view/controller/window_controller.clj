@@ -21,28 +21,30 @@
 (defn get-frame-ui [{:keys [win-ui]}] win-ui)
 
 (defn- put-into-viewport [{:keys [win-ui layout]}]
-  (fx/run-now
-   (.play (anim/white-in 150 win-ui))
-   (viewport/put-component (:layer-no layout) win-ui)))
+  (viewport/put-component (:layer-no layout) win-ui)
+  (.play (anim/white-in 150 win-ui)))
 
 (defn- draw-frame [{:keys [win-ui exp-id layout]}]
-  (fx/run-now
-   (fx/move win-ui (wu/outer-pos (:position layout)))
-   (wu/draw-with-inner-size win-ui exp-id (:size layout))))
+  (fx/move win-ui (wu/outer-pos (:position layout)))
+  (wu/draw-with-inner-size win-ui exp-id (:size layout)))
 
 (defn update-window-size [window new-size]
-  (doto (assoc-in window [:layout :size] new-size)
-    (draw-frame)))
+  (let [ret (assoc-in window [:layout :size] new-size)]
+    (fx/run-now (draw-frame ret))
+    ret))
 
 (defn new-window [exp-id inner-layout]
-  (doto (->Window exp-id inner-layout
-                  (wu/create) {} {:doing :selecting :modified? true})
-    (put-into-viewport)
-    (draw-frame)))
+  (let [window (->Window exp-id inner-layout
+                         (wu/create) {} {:doing :selecting :modified? true})]
+    (fx/run-now (doto window
+                  (draw-frame)
+                  (put-into-viewport)))
+    window))
 
 (defn focus [{:keys [layout win-ui]} current-layer-no]
-  (wu/select-window win-ui)
-  (viewport/focus current-layer-no (:layer-no layout) win-ui))
+  (fx/run-now
+   (wu/select-window win-ui)
+   (viewport/focus current-layer-no (:layer-no layout) win-ui)))
 
 (defn unfocus [{:keys [win-ui]}]
   (wu/unselect-window win-ui))
@@ -52,7 +54,7 @@
       (update :position wu/inner-pos)
       (update :size wu/inner-size)))
 
-(defn- create-and-delete-ui [editor layer-no exp-table created-ids deleted-ids]
+(defn- create-and-delete-ui [editor win-ui exp-table created-ids deleted-ids]
   (let [new-exps (->> created-ids
                       (map (fn [node-id]
                              (let [content (ed/get-content editor node-id)]
@@ -61,10 +63,10 @@
                                          :attributes {}}})))
                       (into {}))]
     (fx/run-now
-     (viewport/put-components layer-no (map :component (vals new-exps)))
-     (viewport/remove-components (keep (fn [[node-id m]]
-                                         (when (deleted-ids node-id) (:component m)))
-                                       exp-table)))
+     (wu/put-components win-ui (map :component (vals new-exps)))
+     (wu/delete-components (keep (fn [[node-id m]]
+                                   (when (deleted-ids node-id) (:component m)))
+                                 exp-table)))
     (merge (apply dissoc exp-table deleted-ids) new-exps)))
 
 (defn- check-and-move-component [component old-attributes new-attributes]
@@ -91,7 +93,7 @@
   ([editor window width fit-height?]
    (let [org-height (get-in window [:layout :size :h])
          exp-table   (get-in window [:exp-table])
-         layout-option (-> (get-in window [:layout :position])
+         layout-option (-> wu/inner-top
                            (assoc :w width))
          new-bounds (layout/calcurate-layout layout-decision/build-size-or-option
                                              layout-option editor)
@@ -116,16 +118,16 @@
 (defn update-window [window prev-editor new-editor]
   (let [max-width (get-in window [:layout :size :w])
         org-height (get-in window [:layout :size :h])
-        layer-no (get-in window [:layout :layer-no])
+        win-ui (get window :win-ui)
         exp-id (:exp-id window)
         exp-table   (get-in window [:exp-table])
-        layout-option (-> (get-in window [:layout :position])
+        layout-option (-> wu/inner-top
                           (assoc :w max-width))
         new-bounds (layout/calcurate-layout layout-decision/build-size-or-option
                                             layout-option new-editor)
         {:keys [created modified deleted] :as diff} (ed/diff prev-editor new-editor)
         modified? (check-modified? diff)
-        exp-table (create-and-delete-ui new-editor layer-no exp-table created deleted)
+        exp-table (create-and-delete-ui new-editor win-ui exp-table created deleted)
         new-exp-table (ut/map-kv (partial update-node new-editor new-bounds
                                           (union created modified)) exp-table)
         root-id (ed/get-id new-editor :root)
@@ -143,11 +145,10 @@
         (update-in [:context :modified?] #(or % modified?))
         (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))
 
-(defn- delete-forms [{:keys [exp-table]} ids]
+(defn- delete-forms [{:keys [exp-table win-ui]} ids]
   (let [components (->> ids (keep exp-table) (map :component))]
-    (when-let [c (first components)]
-      (fx/run-now
-       (viewport/remove-components-quick (.getParent c) components)))))
+    (fx/run-now
+     (wu/delete-components-quick win-ui components))))
 
 (defn refresh [window {:keys [editor]}]
   (let [ids (ed/all-node-ids editor)]

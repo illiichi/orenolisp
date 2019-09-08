@@ -194,9 +194,9 @@
 (defn- create-sc-option [rate layer-no]
   {:rate rate :layer-no layer-no})
 
-(defn create-new-layout [current-ui next-layer-no]
-  (let [position (wc/->Position (.getLayoutX current-ui)
-                                (.getLayoutY current-ui))
+(defn create-new-layout [container-ui current-ui next-layer-no]
+  (let [position (wc/->Position (+ (.getLayoutX container-ui) (.getLayoutX current-ui))
+                                (+ (.getLayoutY container-ui) (.getLayoutY current-ui)))
         size (wc/->Size (.getWidth current-ui)
                         (.getHeight current-ui))]
     (wc/->Layout position size next-layer-no)))
@@ -205,11 +205,12 @@
   (fn [state]
     (let [copied-editor (-> (st/current-editor state)
                             conv/sub-editor (ed/move-most :parent))
-          current-layer-no (-> (st/current-window state)
-                               (get-in [:layout :layer-no]))
+          window (st/current-window state)
+          current-layer-no (-> window (get-in [:layout :layer-no]))
           next-layer-no (inc current-layer-no)
           new-exp (ec/new-expression copied-editor (create-sc-option rate next-layer-no))
-          new-layout (create-new-layout (st/current-ui state) next-layer-no)]
+          new-layout (create-new-layout (:win-ui window)
+                                        (st/current-ui state) next-layer-no)]
       (sc/set-volume new-exp 1)
       (-> (with-current-window state
             (fn [editor]
