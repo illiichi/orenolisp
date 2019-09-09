@@ -56,8 +56,21 @@
       (update :y #(- % TOP-PADDING))))
 (defn inner-size [{:keys [w h]}]
   {:w (- w (* 2 PADDING)) :h (- h TOP-PADDING PADDING)})
-(defn outer-size [w h]
-  [(+ (* 2 PADDING) w) (+ TOP-PADDING PADDING h)])
+(defn outer-size
+  ([{:keys [w h]}]
+   (let [[w h] (outer-size w h)]
+     {:w w :h h}))
+  ([w h]
+   [(+ (* 2 PADDING) w) (+ TOP-PADDING PADDING h)]))
+
+(defn inner-layout [layout]
+  (-> layout
+      (update :position inner-pos)
+      (update :size inner-size)))
+(defn outer-layout [layout]
+  (-> layout
+      (update :position outer-pos)
+      (update :size outer-size)))
 
 (defn draw-with-inner-size [ui exp-id {:keys [w h]}]
   (let [w (min MAX-WIDTH w)

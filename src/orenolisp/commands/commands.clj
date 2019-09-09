@@ -29,10 +29,11 @@
                     (ec/apply-step-function f))
         new-window (-> (get windows exp-id)
                        (wc/update-window (:editor prev-exp)
-                                         (:editor new-exp)))]
+                                         (:editor new-exp)))
+        new-windows (wc/arrange-window-position windows exp-id new-window)]
     (-> state
         (assoc-in [:expressions exp-id] new-exp)
-        (assoc-in [:windows exp-id] new-window))))
+        (assoc :windows new-windows))))
 
 (defn- with-current-window [{:keys [current-exp-id] :as state} f]
   (with-window state current-exp-id f))
@@ -175,8 +176,9 @@
         (assoc :current-exp-id exp-id))))
 
 (def prepared-locations (atom (cycle [[0.5 0.8 0.45 0.5]
-                                      [0.5 0.8 0.725 0.5]
-                                      [0.5 0.8 0.175 0.5]])))
+                                      ;; [0.5 0.8 0.725 0.5]
+                                      ;; [0.5 0.8 0.175 0.5]
+                                      ])))
 (defn- pop-location []
   (let [args (apply viewport/location-by-ratio (first (swap! prepared-locations rest)))]
     (-> (apply wc/->layout 0 args)

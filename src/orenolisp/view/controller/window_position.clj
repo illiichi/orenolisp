@@ -45,3 +45,10 @@
         (let [[next-exp-id next-base-layout] (first new-layouts)]
           (recur next-acc next-exp-id next-base-layout next-layouts))))))
 
+(defn detect-direction [prev-layout new-layout]
+  (let [{prev-w :w prev-h :h} (:size prev-layout)
+        {new-w :w new-h :h} (:size new-layout)
+        dw (- new-w prev-w)
+        dh (- new-h prev-h)]
+    (if (< (Math/abs dw) (Math/abs dh)) [:h dh] [:w dw])))
+

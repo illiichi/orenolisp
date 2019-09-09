@@ -1,6 +1,7 @@
 (ns orenolisp.view.controller.window-controller
   (:require [orenolisp.view.ui.component.window :as wu]
             [orenolisp.view.ui.component.viewport :as viewport]
+            [orenolisp.view.controller.window-position :as wp]
             [orenolisp.view.layout.layout :as layout]
             [orenolisp.view.layout.layout-decision :as layout-decision]
             [orenolisp.view.ui.component.animations :as anim]
@@ -9,6 +10,7 @@
             [orenolisp.view.ui.expression-ui :as eu]
             [orenolisp.view.ui.fx-util :as fx]
             [orenolisp.watcher.engine :as we]
+            [orenolisp.util :as u]
             [clojure.set :refer [union]]))
 
 (defrecord Size [w h])
@@ -25,8 +27,8 @@
   (.play (anim/white-in 150 win-ui)))
 
 (defn- draw-frame [{:keys [win-ui exp-id layout]}]
-  (fx/move win-ui (wu/outer-pos (:position layout)))
-  (wu/draw-with-inner-size win-ui exp-id (:size layout)))
+  (wu/draw-with-inner-size win-ui exp-id (:size layout))
+  (fx/move win-ui (wu/outer-pos (:position layout))))
 
 (defn update-window-size [window new-size]
   (let [ret (assoc-in window [:layout :size] new-size)]
@@ -139,7 +141,7 @@
                         (map new-exp-table)
                         (map :component)))
     (-> window
-        (update-window-size inner-size)
+        (assoc-in [:layout :size] inner-size)
         (update :watcher-gens #(apply dissoc % deleted))
         (assoc :exp-table new-exp-table)
         (update-in [:context :modified?] #(or % modified?))
@@ -170,3 +172,22 @@
               (update :attributes f))]
     (fx/run-now (eu/render-form node-id m editor temporary-bounds))
     (assoc window [:exp-table node-id] m)))
+
+
+(defn arrange-window-position [windows base-exp-id new-window]
+  (let [layouts (u/map-value #(-> % :layout wu/outer-layout) windows)
+        [direction d] (wp/detect-direction (get layouts base-exp-id)
+                                           (wu/outer-layout (:layout new-window)))
+        arranged-layouts (wp/resize layouts base-exp-id direction d)
+        windows (assoc windows base-exp-id new-window)]
+    (reduce-kv (fn [acc exp-id layout]
+                 (let [inner-layout (wu/inner-layout layout)
+                       window (-> (get windows exp-id)
+                                  (assoc :layout inner-layout))]
+                   (fx/run-now
+                    (when (= base-exp-id exp-id)
+                      (draw-frame window))
+                    (fx/move (:win-ui window) (wu/outer-pos (:position inner-layout))))
+                   (assoc acc exp-id window)))
+               windows
+               arranged-layouts)))

@@ -103,7 +103,12 @@
 
 (defn ui-center [ui]
   (let [{:keys [x y w h]} (ui-bounds ui)]
-    [(+ x (* 1/2 w)) (+ y (* 1/2 h))]))
+    ;; fixme: window描画時に外側のStackPaneのサイズが反映されていないことがあるため
+    ;; １つ目の小要素のcanvasのサイズを取得する
+    (if (or (= w 0.0) (= h 0.0))
+      (let [{:keys [w h]} (-> ui .getChildren first ui-bounds)]
+        [(+ x (* 1/2 w)) (+ y (* 1/2 h))])
+      [(+ x (* 1/2 w)) (+ y (* 1/2 h))])))
 
 (defn translate
   ([ui x y max-parent] (translate ui x y (.getWidth max-parent) (.getHeight max-parent)))
