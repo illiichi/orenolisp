@@ -4,7 +4,7 @@
             [llll.macro.control :as lc]))
 
 (def default-option {:swap-option {:switch-dur 8
-                                   :fade-out-dur 64}
+                                   :fade-out-dur 32}
                      :period 8})
 
 (defn- exp-id->sym [exp-id]

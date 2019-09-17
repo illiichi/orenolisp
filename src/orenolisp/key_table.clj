@@ -10,14 +10,13 @@
 
 (def clear-keymap
   {{:char \r} cmd/refresh
-   {:char \c} cmd/stop-sound})
+   {:char \c} cmd/stop-sound
+   {:char \a} cmd/stop-all-sound})
 
 (def initial-keymap
   {{:char "<space>"} [cmd/open-new-window
                       (cmd/add :child (form/input-ident))
-                      cmd/switch-to-typing-mode]
-   {:char \a :specials #{:ctrl :alt}} [cmd/switch-to-selecting-mode
-                                       (cmd/move-most :parent)]})
+                      cmd/switch-to-typing-mode]})
 
 (def layer-keymap
   {{:char \n} [cmd/open-new-window
@@ -42,13 +41,17 @@
    global-keymap
    {{:char \j :specials #{:ctrl :alt}} (cmd/move-window ut/find-next)
     {:char \k :specials #{:ctrl :alt}} (cmd/move-window ut/find-prev)
-    {:char \j} (cmd/move :right)
-    {:char \k} (cmd/move :left)
+    {:char \j} (cmd/move-right-through)
+    {:char \k} (cmd/move-left-through)
     {:char \l} (cmd/move :parent)
     {:char \[} (cmd/move :parent)
+    {:char \]} (cmd/move :parent)
     {:char \J} (cmd/swap :right)
     {:char \K} (cmd/swap :left)
+    {:char \a :specials #{:ctrl}} (cmd/move-most :left)
+    {:char \e :specials #{:ctrl}} (cmd/move-most :right)
     {:char \a :specials #{:ctrl :alt}} (cmd/move-most :parent)
+    {:char \E} (cmd/move-most :child)
     {:char \d :specials #{:ctrl}} (cmd/delete)
     {:char "<space>" :specials #{:ctrl}} (cmd/window-command ed/toggle-mark)
     {:char \r} (cmd/raise)
@@ -71,7 +74,8 @@
    ["lf-cub:kr" "lf-pulse:kr" "lf-saw:kr" "lf-tri:kr"]
    ["lf-cub" "lf-pulse" "lf-saw" "lf-tri"]
    ["lf-noise0" "lf-noise1" "lf-noise2"]
-   ["u/rg-lin" "u/rg-exp"]
+   ["lf-noise0:kr" "lf-noise1:kr" "lf-noise2:kr"]
+   ["u/lin-lin" "u/lin-exp"]
    ["line" "x-line" "line:kr" "x-line:kr"]
    ["u/sin-r" "u/sin-rex"]
    ["lpf" "hpf" "rlpf" "rhpf"]])
@@ -80,6 +84,13 @@
   (if-let [xs (->> candidate-table (filter #((set %) current)) first)]
     (->> (cycle xs) (drop-while #(not= current %)) rest first)
     current))
+
+(defn- next-ratio [current]
+  (let [[ugen ratio] (.split current ":")
+        new-ratio (case ratio
+                    "kr" "ar"
+                    "kr")]
+    (str ugen ":" new-ratio)))
 
 (def extraction-keymap
   {{:char \a} (cmd/extract-as-in-ugen :audio)
@@ -102,7 +113,9 @@
 
 (def transformation-ident-keymap
   (merge common-transformation-keymap
-         {{:char \r} [(cmd/window-command trans/wrap-by-range)
+         {{:char \r} [(cmd/window-command (trans/wrap-by-range 'lf-cub:kr))
+                      (cmd/log "completed: range transformation")]
+          {:char \n} [(cmd/window-command (trans/wrap-by-range 'lf-noise0:kr))
                       (cmd/log "completed: range transformation")]
           {:char \l} [(cmd/window-command trans/wrap-by-line)
                       (cmd/log "completed: gauge transformation")
@@ -122,10 +135,15 @@
     {:char \t :specials #{:alt}} (cmd/set-temporary-keymap "transformation"
                                                            transformation-keymap)
     {:char \n :specials #{:alt}} (cmd/excursion
-                                   (fn [editor]
-                                     (-> editor
-                                         (ed/move :child)
-                                         (ed/edit #(update % :value next-candidate)))))
+                                  (fn [editor]
+                                    (-> editor
+                                        (ed/move :child)
+                                        (ed/edit #(update % :value next-candidate)))))
+    {:char \k :specials #{:alt}} (cmd/excursion
+                                  (fn [editor]
+                                    (-> editor
+                                        (ed/move :child)
+                                        (ed/edit #(update % :value next-ratio)))))
     {:char \i :specials #{:ctrl}} [(cmd/add :child (form/input-ident))
                                    cmd/switch-to-typing-mode]
     {:char \s} (cmd/window-command #(-> % (ed/move :child) (ed/move :right)))}))
@@ -139,6 +157,7 @@
     {:char \t :specials #{:alt}} (cmd/set-temporary-keymap "transformation"
                                                            transformation-ident-keymap)
     {:char \n :specials #{:alt}} (cmd/edit #(update % :value next-candidate))
+    {:char \k :specials #{:alt}} (cmd/edit #(update % :value next-ratio))
     {:char \d} (cmd/calcurate-value (partial * 2))
     {:char \c} (cmd/calcurate-value (partial * 1/2))
     {:char \D} (cmd/calcurate-value (partial * 10))
@@ -146,23 +165,29 @@
     {:char \a} (cmd/calcurate-n-digit 0 +)
     {:char \z} (cmd/calcurate-n-digit 0 -)
     {:char \s} (cmd/calcurate-n-digit 1 +)
-    {:char \x} (cmd/calcurate-n-digit 1 -)}))
+    {:char \S} (cmd/calcurate-n-digit 1 #(+ %1 (* 5 %2)))
+    {:char \x} (cmd/calcurate-n-digit 1 -)
+    {:char \X} (cmd/calcurate-n-digit 1 #(- %1 (* 5 %2)))}))
 
 (def completion-table
   {"s" 'sin-osc
-   "us" 'u/sin-r
    "w" 'white-noise
    "i" 'impulse
-   "ln" 'lf-noise0
    "ur" 'u/rotate->
    "un" 'u/n-range
+   "us" 'u/sin-r
+   "usw" 'u/switch->
    "cl" 'clip:ar
    "uf" 'u/eff
+   "ln" 'lf-noise0
    "lp" 'lf-pulse
+   "ls" 'lf-saw
    "rz" 'ringz
-   "i*" '(iterate (fn [x] (* x)) 1)
-   "rd" '(u/reduce-> (fn [acc x] (+ acc)) [])
+   "sh" 'shuffle
+   "cy" 'cycle
    "fr" '(free-verb 1 1)
+   "gv" 'g-verb
+   "t" 'tanh
    "in" '(in (l4/sound-bus :exp-1 :out-bus) 2)
    "ep" '(env-gen (env-perc 0 0.5))
    "eg" '(env-gen (envelope [] []))
@@ -195,6 +220,11 @@
                  (free-verb 0.8 1)
                  (tanh) (* 1/8))})
 
+(defn- finish-edit
+  ([] [(cmd/edit tx/finish)
+       cmd/switch-to-selecting-mode])
+  ([then] (conj (finish-edit) then)))
+
 (def ident-typing-keymap
   (merge
    global-keymap
@@ -208,10 +238,10 @@
     {:char \e :specials #{:ctrl}} (cmd/edit tx/jump-tail)
     {:char "<tab>"}  [(cmd/complete completion-table)
                       cmd/switch-to-selecting-mode]
-    {:char "<esc>"}  [(cmd/edit tx/finish)
-                      cmd/switch-to-selecting-mode]
-    {:char \[}       [(cmd/edit tx/finish)
-                      cmd/switch-to-selecting-mode]
+    {:char "<esc>"}  (finish-edit)
+    {:char \[}       (finish-edit)
+    {:char \]}       (finish-edit (cmd/move :right))
+    {:char \a :specials #{:ctrl :alt}} (finish-edit (cmd/move-most :parent))
     {:char \(}  (cmd/add-with-keep-position :parent (form/paren))
     {:char \}}  (cmd/add-with-keep-position :parent (form/vector))
     {:char "<space>" :specials #{:super}} [(cmd/edit tx/finish)
@@ -219,7 +249,8 @@
                                            (cmd/edit #(tx/open-editor (:value %)))
                                            cmd/switch-to-typing-mode]
     {:char "<space>"} [(cmd/edit tx/finish)
-                       (cmd/add :right (form/input-ident))]}))
+                       (cmd/add :right (form/input-ident))]
+    {:char \h :specials #{:alt}} (finish-edit cmd/evaluate)}))
 
 (def in-ugen-selecting-keymap
   (merge

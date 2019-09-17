@@ -56,7 +56,7 @@
                    (trans/wrap-by-range))]
     (is (ed/check-consistency nil editor))
     (is (= (conv/convert-editor->sexp editor)
-        '(xxx (u/rg-lin (lf-cub:kr 0.01) (f X y z) (f X y z)) zzz)))))
+        '(xxx (u/lin-lin (lf-cub:kr 1) (f X y z) (f X y z)) zzz)))))
 
 (deftest let-binding
   (testing "new let binding"

@@ -81,14 +81,14 @@
 (defn wrap-by-range [editor]
   (transform-sexp editor
                   (fn [sexp]
-                    (list 'u/rg-lin '(lf-cub:kr 1) sexp sexp))))
+                    (list 'u/lin-lin '(lf-cub:kr 1) sexp sexp))))
 
 (defn wrap-by-line [editor]
   (let [node-id (ed/get-id editor :self)]
     (-> editor
         (transform-sexp
          (fn [sexp]
-           (list 'u/tap-line node-id sexp sexp 32 false)))
+           (list 'u/tap-line node-id sexp sexp 16 false)))
         (ed/move :parent)
         ;; fixme when node-id has been changed
         (as-> editor (ed/edit editor #(assoc % :node-id (ed/get-id editor :self)))))))

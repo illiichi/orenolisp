@@ -123,8 +123,8 @@
         sy (- (* cy v-height) (* 1/2 height))]
     [sx sy width height]))
 
-(defn move-center []
+(defn move-initial-position []
   (doto %scroll-pane
-    (.setVvalue 0.5)
-    (.setHvalue 0.5)))
+    (.setVvalue 0.2)
+    (.setHvalue 0.0)))
 

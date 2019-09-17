@@ -1,5 +1,5 @@
 (ns orenolisp.sc.util
-  (:use [overtone.core]))
+  (:use [overtone.core :exclude [lin-lin lin-exp]]))
 
 (defmacro if->> [pred f f2 v]
   `(if ~pred (~f ~v) (~f2 ~v)))
@@ -56,7 +56,7 @@
                         (assoc :u3 (bit-test count 2))
                         (assoc :u4 (bit-test count 3)))))})
 (defn transpose [xss]
-  (apply map list xss))
+  (apply mapv vector xss))
 
 (defn lower-bound [in]
   (case (first in)
@@ -80,10 +80,10 @@
     lf-pulse:kr 0
     0))
 
-(defmacro rg-lin [in lo hi]
-  `(lin-lin ~in ~(lower-bound in) 1 ~lo ~hi))
-(defmacro rg-exp [in lo hi]
-  `(lin-exp ~in ~(lower-bound in) 1 ~lo ~hi))
+(defmacro lin-lin [in lo hi]
+  `(~'lin-lin ~in ~(lower-bound in) 1 ~lo ~hi))
+(defmacro lin-exp [in lo hi]
+  `(~'lin-exp ~in ~(lower-bound in) 1 ~lo ~hi))
 
 (defmacro dq [trig arr] `(demand ~trig 0 (dseq ~arr INF)))
 (defmacro dq:kr [trig arr] `(demand:kr ~trig 0 (dseq ~arr INF)))
@@ -117,16 +117,16 @@
 (defcgen sin-r [freq {:default 440}
                 min-value {:default 0}
                 max-value {:default 1}]
-  (:ar (lin-lin (sin-osc:ar freq (* 2 Math/PI (rand)))
+  (:ar (overtone.core/lin-lin (sin-osc:ar freq (* 2 Math/PI (rand)))
                 -1 1 min-value max-value))
-  (:kr (lin-lin (sin-osc:kr freq (* 2 Math/PI (rand)))
+  (:kr (overtone.core/lin-lin (sin-osc:kr freq (* 2 Math/PI (rand)))
                 -1 1 min-value max-value)))
 (defcgen sin-rex [freq {:default 440}
                   min-value {:default 0}
                   max-value {:default 1}]
-  (:ar (lin-exp (sin-osc:ar freq (* 2 Math/PI (rand)))
+  (:ar (overtone.core/lin-exp (sin-osc:ar freq (* 2 Math/PI (rand)))
                 -1 1 min-value max-value))
-  (:kr (lin-exp (sin-osc:kr freq (* 2 Math/PI (rand)))
+  (:kr (overtone.core/lin-exp (sin-osc:kr freq (* 2 Math/PI (rand)))
                 -1 1 min-value max-value)))
 
 (defmacro reduce->
@@ -146,6 +146,9 @@
     (if is-single
       (mix result)
       (map mix result))))
+
+(defmacro t-map [f xss]
+  (list 'apply 'map f (transpose xss)))
 
 (defmacro s-map [f xs]
   (list 'splay:ar ('map f xs)))

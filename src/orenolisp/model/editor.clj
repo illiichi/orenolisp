@@ -37,11 +37,24 @@
 (defn all-node-ids [{:keys [table]}]
   (keys table))
 
+(defn top-of-child? [{:keys [current-id tree]}]
+  (= (.indexOf (tr/get-siblings tree current-id) current-id) 0))
+(defn end-of-child? [{:keys [current-id tree]}]
+  (let [siblings (tr/get-siblings tree current-id)]
+    (= (.indexOf siblings current-id) (dec (count siblings)))))
+(defn root? [{:keys [current-id tree]}]
+  (not (tr/get-parent tree current-id)))
+
 (defn- drill-down [tree node-id]
   (let [xs (tr/get-children tree node-id)]
     (if (empty? xs)
       node-id
       (drill-down tree (last xs)))))
+
+(defn float-up [editor]
+  (if (and (end-of-child? editor) (not (root? editor)))
+    (float-up (move editor :parent))
+    editor))
 
 (defn move-most [{:keys [current-id tree] :as editor} direction]
   (let [next-id (case direction
@@ -71,15 +84,6 @@
 (defn get-attributes
   ([editor] (get-attributes editor (:current-id editor)))
   ([{:keys [table]} target-id] (some-> (get table target-id) :attributes)))
-
-(defn root? [{:keys [current-id tree]}]
-  (not (tr/get-parent tree current-id)))
-
-(defn top-of-child? [{:keys [current-id tree]}]
-  (= (.indexOf (tr/get-siblings tree current-id) current-id) 0))
-(defn end-of-child? [{:keys [current-id tree]}]
-  (let [siblings (tr/get-siblings tree current-id)]
-    (= (.indexOf siblings current-id) (dec (count siblings)))))
 
 (defn- apply-tree-operation [editor f]
   (let [deleted-ids (f)]

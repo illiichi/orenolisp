@@ -79,6 +79,20 @@
   (window-command #(ed/move % direction)))
 (defn move-most [direction]
   (window-command #(ed/move-most % direction)))
+(defn move-left-through []
+  (window-command (fn [editor]
+                    (if (ed/top-of-child? editor)
+                      (-> editor
+                          (ed/move [:parent :left])
+                          (ed/move-most :child))
+                      (ed/move editor :left)))))
+(defn move-right-through []
+  (window-command (fn [editor]
+                    (if (ed/end-of-child? editor)
+                      (-> editor
+                          (ed/float-up)
+                          (ed/move [:right :child]))
+                      (ed/move editor :right)))))
 (defn edit [f]
   (window-command #(ed/edit % f)))
 (defn delete []
@@ -155,8 +169,7 @@
 (defn duplicate []
   (window-command
    (fn [editor]
-     (let [copied (-> (conv/sub-editor editor)
-                      (ed/move-most :parent))]
+     (let [copied (conv/sub-editor editor)]
        (-> editor
            (ed/add-editor :right copied))))))
 
@@ -341,6 +354,11 @@
 
 (defn stop-sound [state]
   (let [exp-id (:current-exp-id state)]
+    (sc/stop-sound exp-id))
+  state)
+
+(defn stop-all-sound [state]
+  (doseq [exp-id (-> state :expressions keys)]
     (sc/stop-sound exp-id))
   state)
 
