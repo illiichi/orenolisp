@@ -124,6 +124,9 @@
 (defn clear-other-cursor [editor]
   (dissoc editor :multiple-cursors))
 
+(defn multiple-cursors-activated? [editor]
+  (not (empty? (:multiple-cursors editor))))
+
 (defn edit [{:keys [current-id multiple-cursors] :as editor} f]
   (reduce (fn [editor node-id] (update editor :table update-in [node-id :content] f))
           editor

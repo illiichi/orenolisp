@@ -145,7 +145,10 @@
         (update :watcher-gens #(apply dissoc % deleted))
         (assoc :exp-table new-exp-table)
         (update-in [:context :modified?] #(or % modified?))
-        (assoc-in [:context :node-type] (:type (ed/get-content new-editor))))))
+        (assoc-in [:context :node-type]
+                  (if (ed/multiple-cursors-activated? new-editor)
+                    :ident              ; fixme: ad-hoc implementation
+                    (:type (ed/get-content new-editor)))))))
 
 (defn- delete-forms [{:keys [exp-table win-ui]} ids]
   (let [components (->> ids (keep exp-table) (map :component))]
