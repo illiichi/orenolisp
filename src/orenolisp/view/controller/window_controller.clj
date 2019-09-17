@@ -177,20 +177,29 @@
     (assoc window [:exp-table node-id] m)))
 
 
-(defn arrange-window-position [windows base-exp-id new-window]
-  (let [layouts (u/map-value #(-> % :layout wu/outer-layout) windows)
-        [direction d] (wp/detect-direction (get layouts base-exp-id)
-                                           (wu/outer-layout (:layout new-window)))
-        arranged-layouts (wp/resize layouts base-exp-id direction d)
-        windows (assoc windows base-exp-id new-window)]
-    (reduce-kv (fn [acc exp-id layout]
-                 (let [inner-layout (wu/inner-layout layout)
-                       window (-> (get windows exp-id)
-                                  (assoc :layout inner-layout))]
-                   (fx/run-now
-                    (when (= base-exp-id exp-id)
-                      (draw-frame window))
-                    (fx/move (:win-ui window) (wu/outer-pos (:position inner-layout))))
-                   (assoc acc exp-id window)))
-               windows
-               arranged-layouts)))
+(defn- move-with-animation [ui prev-position new-position]
+  (.play (anim/move-ui ui prev-position new-position)))
+
+(defn arrange-window-position
+  ([windows base-exp-id]
+   (arrange-window-position windows base-exp-id (get windows base-exp-id)))
+  ([windows base-exp-id new-window]
+   (let [layouts (u/map-value #(-> % :layout wu/outer-layout) windows)
+         [direction d] (wp/detect-direction (get layouts base-exp-id)
+                                            (wu/outer-layout (:layout new-window)))
+         arranged-layouts (wp/resize layouts base-exp-id direction d)
+         windows (assoc windows base-exp-id new-window)]
+     (reduce-kv (fn [acc exp-id layout]
+                  (let [inner-layout (wu/inner-layout layout)
+                        window (get windows exp-id)
+                        prev-position (get-in window [:layout :position])
+                        window (assoc window :layout inner-layout)]
+                    (fx/run-now
+                     (when (= base-exp-id exp-id)
+                       (draw-frame window))
+                     (move-with-animation (:win-ui window)
+                                          (wu/outer-pos prev-position)
+                                          (wu/outer-pos (:position inner-layout))))
+                    (assoc acc exp-id window)))
+                windows
+                arranged-layouts))))

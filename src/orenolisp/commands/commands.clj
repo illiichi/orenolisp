@@ -182,7 +182,7 @@
         (update :expressions #(assoc % exp-id expression))
         (assoc :current-exp-id exp-id))))
 
-(def prepared-locations (atom (cycle [[0.5 0.8 0.45 0.5]
+(def prepared-locations (atom (cycle [[0.4 0.3 0.15 0.3]
                                       ;; [0.5 0.8 0.725 0.5]
                                       ;; [0.5 0.8 0.175 0.5]
                                       ])))
@@ -191,10 +191,19 @@
     (-> (apply wc/->layout 0 args)
         wc/convert-to-inner-layout)))
 
+(defn- create-next-of-layout [layout]
+  (update-in layout [:position :x] #(+ % (get-in layout [:size :w]) 45)))
+(defn- create-below-of-layout [layout]
+  (update-in layout [:position :y] #(+ % (get-in layout [:size :h]) 45)))
+
 (defn open-new-window [state]
-  (let [new-exp (ec/empty-expression)]
+  (let [new-exp (ec/empty-expression)
+        next-layout (or (some-> (st/current-window state)
+                                :layout
+                                create-next-of-layout)
+                        (pop-location))]
     (sc/set-volume new-exp 1)
-    (open-window state new-exp (pop-location))))
+    (open-window state new-exp next-layout)))
 
 (defn refresh [{:keys [current-exp-id] :as state}]
   (update-in state [:windows current-exp-id]
@@ -227,9 +236,6 @@
           (open-window new-exp new-layout)
           refresh))))
 
-(defn- create-below-of-layout [layout]
-  (update-in layout [:position :y] #(+ % (get-in layout [:size :h]) 45)))
-
 (defn copy-window [state]
   (let [org-window (st/current-window state)
         org-expression (st/current-expression state)
@@ -239,6 +245,7 @@
     (sc/set-volume new-exp 1)
     (-> state
         (open-window new-exp new-layout)
+        (update :windows #(wc/arrange-window-position % (:exp-id new-exp)))
         refresh)))
 
 (defn move-window [find-f]
@@ -289,25 +296,32 @@
                               (map :exp-id))]
     (reduce evaluate-exp state modified-exp-ids)))
 
-(defn widen-window [dw]
+(defn- change-window-layout [f]
   (fn [state]
-    (update-in state [:windows (:current-exp-id state)]
-               (fn [w]
-                 (let [new-width (+ dw (get-in w [:layout :size :w]))]
-                   (wc/layout (st/current-editor state) w new-width))))))
+    (let [window (st/current-window state)
+          new-window (f state window)]
+      (-> state
+          (update :windows
+                  #(wc/arrange-window-position % (:exp-id window) new-window))))))
 
-(defn fit-window-height [state]
-  (update-in state [:windows (:current-exp-id state)]
-               (fn [w]
-                 (wc/layout (st/current-editor state)
-                            w
-                            (get-in w [:layout :size :w]) true))))
+(defn widen-window [dw]
+  (change-window-layout
+   (fn [state w]
+     (let [new-width (+ dw (get-in w [:layout :size :w]))]
+       (wc/layout (st/current-editor state) w new-width)))))
 
-(defn half-window-height [state]
-  (update-in state [:windows (:current-exp-id state)]
-               (fn [w]
-                 (wc/update-window-size w (update (get-in w [:layout :size])
-                                                  :h #(/ % 2))))))
+(defn fit-window-height []
+  (change-window-layout
+   (fn [state w]
+     (wc/layout (st/current-editor state)
+                w
+                (get-in w [:layout :size :w]) true))))
+
+(defn half-window-height []
+  (change-window-layout
+   (fn [state w]
+     (wc/update-window-size w (update (get-in w [:layout :size])
+                                      :h #(/ % 2))))))
 
 
 (defn open-window-from-in-ugen [state]

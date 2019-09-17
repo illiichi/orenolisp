@@ -50,5 +50,5 @@
         {new-w :w new-h :h} (:size new-layout)
         dw (- new-w prev-w)
         dh (- new-h prev-h)]
-    (if (< (Math/abs dw) (Math/abs dh)) [:h dh] [:w dw])))
+    (if (< (Math/abs dh) (Math/abs dw)) [:w dw] [:h dh])))
 

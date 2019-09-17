@@ -25,8 +25,8 @@
                cmd/switch-to-typing-mode]
    {:char \w} (cmd/widen-window 100)
    {:char \W} (cmd/widen-window -100)
-   {:char \H} cmd/fit-window-height
-   {:char \h} cmd/half-window-height
+   {:char \H} (cmd/fit-window-height)
+   {:char \h} (cmd/half-window-height)
    {:char \c} [cmd/copy-window
                (cmd/log "copy window")]})
 

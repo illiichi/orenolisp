@@ -221,3 +221,18 @@
     (doto (fx/create-animation key-frames)
       (fx/on-animation-finished (fn [_]
                                   (.setEffect ui nil))))))
+
+(defn move-ui [ui from to]
+  (let [px (.layoutXProperty ui)
+        py (.layoutYProperty ui)
+        mid (fn [a1 a2] (+ a1 (* 0.9 (- a2 a1))))
+        key-frames [(fx/->KeyFrame 0
+                                   [px (:x from)]
+                                   [py (:y from)])
+                    (fx/->KeyFrame 100
+                                   [px (mid (:x from) (:x to))]
+                                   [py (mid (:y from) (:y to))])
+                    (fx/->KeyFrame 300
+                                   [px (:x to)]
+                                   [py (:y to)])]]
+    (fx/create-animation key-frames)))
