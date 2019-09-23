@@ -123,10 +123,19 @@
 
 (defn add-as-multiple-cursors
   ([{:keys [current-id] :as editor}] (add-as-multiple-cursors editor current-id))
-  ([editor node-id] (update editor :multiple-cursors #(cons node-id %))))
+  ([editor node-id]
+   (letfn [(append [[xs & xss] x] (cons (cons x xs) xss))]
+     (update editor :multiple-cursors #(append % node-id)))))
 
-(defn clear-other-cursor [editor]
-  (dissoc editor :multiple-cursors))
+(defn push-new-multiple-cursors
+  ([editor]
+   (update editor :multiple-cursors #(cons [] %))))
+
+(defn pop-multicursor  [editor]
+  (update editor :multiple-cursors rest))
+
+(defn reverse-multicursors [editor]
+  (update editor :multiple-cursors reverse))
 
 (defn multiple-cursors-activated? [editor]
   (not (empty? (:multiple-cursors editor))))
@@ -134,7 +143,8 @@
 (defn edit [{:keys [current-id multiple-cursors] :as editor} f]
   (reduce (fn [editor node-id] (update editor :table update-in [node-id :content] f))
           editor
-          (if (empty? multiple-cursors) [current-id] multiple-cursors)))
+          (if (empty? multiple-cursors) [current-id]
+              (first multiple-cursors))))
 
 (defn focus? [{:keys [current-id]} target-id] (= target-id current-id))
 (defn get-marks [{:keys [marks]}] marks)
@@ -151,7 +161,7 @@
 (defn toggle-mark [editor]
   (or (try-unmark editor) (mark editor)))
 (defn with-marks [editor f]
-  (some->> (get-marks editor) (f editor) (clear-mark)))
+  (some->> (get-marks editor) reverse (f editor) (clear-mark)))
 
 (defn delete [{:keys [current-id tree] :as editor}]
   (if (root? editor)

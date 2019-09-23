@@ -18,6 +18,21 @@
       (is (ed/check-consistency nil editor))
       (is (= (conv/convert-editor->sexp editor)
              '(xxx (map (fn [x] (* (f x y z) (g a b))) [(+ 1 2 3)]) zzz)))))
+  (testing "two arguments"
+    (let [sexp '(xxx (* (f (+ 1 2 3) 4 z) (g a b)) zzz)
+          editor (-> (conv/convert-sexp->editor sexp)
+                     (ed/move [:root :child :right :child :right :child :right])
+                     (ed/mark)
+                     (ed/move :right)
+                     (ed/mark)
+                     (ed/move [:root :child :right])
+                     (trans/transform-to-map)
+                     (ed/edit #(tx/insert-char % "x"))
+                     (ed/pop-multicursor)
+                     (ed/edit #(tx/insert-char % "y")))]
+      (is (ed/check-consistency nil editor))
+      (is (= (conv/convert-editor->sexp editor)
+             '(xxx (map (fn [x y] (* (f x y z) (g a b))) [(+ 1 2 3)] [4]) zzz)))))
   (testing "add argument"
     (let [sexp '(xxx (map (fn [x] (* (f x y z) (g a b))) [(+ 1 2 3)]) zzz)
           editor (-> (conv/convert-sexp->editor sexp)
@@ -56,7 +71,7 @@
                    (trans/wrap-by-range))]
     (is (ed/check-consistency nil editor))
     (is (= (conv/convert-editor->sexp editor)
-        '(xxx (u/lin-lin (lf-cub:kr 1) (f X y z) (f X y z)) zzz)))))
+           '(xxx (u/lin-lin (lf-cub:kr 1) (f X y z) (f X y z)) zzz)))))
 
 (deftest let-binding
   (testing "new let binding"

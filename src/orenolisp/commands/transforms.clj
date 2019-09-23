@@ -7,18 +7,15 @@
   (ed/find-by-first-element editor #(ed/move % :parent)
                             #(= (:value %) ident-value)))
 
-(defn- wrap-by-map [editor]
+(defn- wrap-by-map [editor arg-node-id]
   (let [parent-editor (-> '(map (fn [___]) [___])
                           conv/convert-sexp->editor
                           (ed/move [:root :child :right]))
         element-id (last (ed/get-ids parent-editor [:right :child]))]
     (-> editor
         (ed/add-editor :parent parent-editor)
-        (ed/with-marks (fn [editor [arg-node-id]]
-                         (when arg-node-id
-                           (-> editor
-                               (ed/jump arg-node-id)
-                               (ed/swap element-id))))))))
+        (ed/jump arg-node-id)
+        (ed/swap element-id))))
 
 (defn- add-map-arguments [editor]
   (let [editor-map (find-nearest-ident editor "map")
@@ -44,7 +41,17 @@
 
 (defn transform-to-map [editor]
   (if (ed/has-mark? editor)
-    (wrap-by-map editor)
+    (-> editor
+        (ed/with-marks
+          (fn [editor [first-node-id & rest-node-ids]]
+            (-> (reduce (fn [editor node-id]
+                          (-> editor
+                              (ed/push-new-multiple-cursors)
+                              (ed/jump node-id)
+                              (add-map-arguments)))
+                        (wrap-by-map editor first-node-id)
+                        rest-node-ids))))
+        (ed/reverse-multicursors))
     (add-map-arguments editor)))
 
 (defn wrap-by-reduce [editor]

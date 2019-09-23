@@ -63,17 +63,16 @@
 
 (defn switch-to-typing-mode [state]
   (st/update-current-context state #(assoc % :doing :typing)))
+
 (defn switch-to-selecting-mode [state]
-  (let [editor (st/current-editor state)]
-    (if (ed/multiple-cursors-activated? editor)
-      (-> state
-          (st/clear-other-cursors)
-          (st/update-current-context
-           #(-> %
-                (assoc :doing :selecting)
-                (assoc :node-type (:type (ed/get-content editor))))))
-      (-> state
-          (st/update-current-context #(assoc % :doing :selecting))))))
+  (let [next-state (st/pop-multicursor state)
+        new-editor (st/current-editor next-state)]
+    (-> next-state
+        (ut/when-> (not (ed/multiple-cursors-activated? new-editor))
+                   (st/update-current-context
+                    #(-> %
+                         (assoc :doing :selecting)
+                         (assoc :node-type (:type (ed/get-content new-editor)))))))))
 
 (defn move [direction]
   (window-command #(ed/move % direction)))

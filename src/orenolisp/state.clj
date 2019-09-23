@@ -45,5 +45,5 @@
   (update-in state [:windows current-exp-id :context] f))
 
 
-(defn clear-other-cursors [{:keys [current-exp-id] :as state}]
-  (update-in state [:expressions current-exp-id :editor] ed/clear-other-cursor))
+(defn pop-multicursor [{:keys [current-exp-id] :as state}]
+  (update-in state [:expressions current-exp-id :editor] ed/pop-multicursor))
