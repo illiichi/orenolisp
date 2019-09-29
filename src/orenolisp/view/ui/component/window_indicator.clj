@@ -1,6 +1,7 @@
 (ns orenolisp.view.ui.component.window-indicator
   (:require [orenolisp.view.ui.fx-util :as fx]
-            [orenolisp.view.ui.theme :as theme])
+            [orenolisp.view.ui.theme :as theme]
+            [orenolisp.view.ui.component.animations :as anim])
   (:import (javafx.scene.canvas Canvas)
            [javafx.scene.effect Bloom]
            (javafx.geometry Insets)
@@ -85,6 +86,13 @@
     (fx/add-child %pane canvas)
     (swap! %windows conj
            (assoc window-info :canvas canvas))))
+
+(defn remove-window [exp-id]
+  (when-let [{:keys [canvas]} (->> @%windows
+                         (filter #(= (:exp-id %) exp-id))
+                         first)]
+    (fx/remove-node canvas (anim/white-out canvas))
+    (swap! %windows (partial filter #(not= (:exp-id %) exp-id)))))
 
 (defn render []
   (def %pane (VBox.))

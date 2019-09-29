@@ -353,13 +353,22 @@
 
 (defn stop-sound [state]
   (let [exp-id (:current-exp-id state)]
-    (sc/stop-sound exp-id))
-  state)
+    (sc/stop-sound exp-id)
+    (volume-watcher/unregister exp-id)
+    (wc/close-window (st/current-window state))
+    (-> ((move-window (fn [now xs]
+                        (or (ut/find-prev now xs)
+                            (ut/find-next now xs)))) state)
+        (update :expressions dissoc exp-id)
+        (update :windows dissoc exp-id))))
 
 (defn stop-all-sound [state]
-  (doseq [exp-id (-> state :expressions keys)]
-    (sc/stop-sound exp-id))
-  state)
+  (fx/run-later
+   (doseq [exp-id (-> state :expressions keys)]
+     (sc/stop-sound exp-id)
+     (volume-watcher/unregister exp-id)
+     (wc/close-window (get-in state [:windows exp-id]))))
+  (st/initial-state))
 
 (defn log [message]
   (fn [state]

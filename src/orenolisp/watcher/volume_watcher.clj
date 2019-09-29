@@ -13,6 +13,10 @@
     (fx/run-later (indicator/add-window info))
     (swap! %exps assoc (get expression :exp-id) info)))
 
+(defn unregister [exp-id]
+  (indicator/remove-window exp-id)
+  (swap! %exps dissoc exp-id))
+
 (defn accumulate []
   (let [exps @%exps]
     (fx/run-later

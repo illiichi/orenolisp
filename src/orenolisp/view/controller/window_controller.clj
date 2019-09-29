@@ -203,3 +203,6 @@
                     (assoc acc exp-id window)))
                 windows
                 arranged-layouts))))
+
+(defn close-window [{:keys [win-ui]}]
+  (fx/remove-node win-ui (anim/white-out win-ui)))
