@@ -99,6 +99,9 @@
   {{:char \m} [(cmd/window-command trans/transform-to-map)
                (cmd/log "completed: map transformation")
                cmd/switch-to-typing-mode]
+   {:char \p} [(cmd/window-command trans/transform-to-t-map)
+               (cmd/log "completed: map transformation")
+               cmd/switch-to-typing-mode]
    {:char \b} [(cmd/window-command trans/let-binding)
                (cmd/log "completed: let bindig")
                cmd/switch-to-typing-mode]})

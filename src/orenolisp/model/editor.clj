@@ -140,11 +140,14 @@
 (defn multiple-cursors-activated? [editor]
   (not (empty? (:multiple-cursors editor))))
 
-(defn edit [{:keys [current-id multiple-cursors] :as editor} f]
-  (reduce (fn [editor node-id] (update editor :table update-in [node-id :content] f))
-          editor
-          (if (empty? multiple-cursors) [current-id]
-              (first multiple-cursors))))
+(defn edit
+  ([editor target-id f]
+   (update editor :table update-in [target-id :content] f))
+  ([{:keys [current-id multiple-cursors] :as editor} f]
+   (reduce (fn [editor node-id] (update editor :table update-in [node-id :content] f))
+           editor
+           (if (empty? multiple-cursors) [current-id]
+               (first multiple-cursors)))))
 
 (defn focus? [{:keys [current-id]} target-id] (= target-id current-id))
 (defn get-marks [{:keys [marks]}] marks)
@@ -163,17 +166,23 @@
 (defn with-marks [editor f]
   (some->> (get-marks editor) reverse (f editor) (clear-mark)))
 
-(defn delete [{:keys [current-id tree] :as editor}]
-  (if (root? editor)
-    (new-editor)
-    (let [next-id (let [siblings (tr/get-siblings tree current-id)]
-                    (if (<= (count siblings) 1)
-                      (tr/get-parent tree current-id)
-                      (or (ut/find-next current-id siblings)
-                          (ut/find-prev current-id siblings))))]
-      (-> editor
-          (apply-tree-operation #(tr/delete tree current-id))
-          (assoc :current-id next-id)))))
+(defn delete
+  ([{:keys [current-id tree] :as editor} target-id]
+   (if (= current-id target-id)
+     (delete editor)
+     (-> editor
+         (apply-tree-operation #(tr/delete tree target-id)))))
+  ([{:keys [current-id tree] :as editor}]
+   (if (root? editor)
+     (new-editor)
+     (let [next-id (let [siblings (tr/get-siblings tree current-id)]
+                     (if (<= (count siblings) 1)
+                       (tr/get-parent tree current-id)
+                       (or (ut/find-next current-id siblings)
+                           (ut/find-prev current-id siblings))))]
+       (-> editor
+           (apply-tree-operation #(tr/delete tree current-id))
+           (assoc :current-id next-id))))))
 
 
 (defn copy [editor]

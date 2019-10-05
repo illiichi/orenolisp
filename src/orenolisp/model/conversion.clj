@@ -95,4 +95,5 @@
   ([editor node-id]
    (-> editor
        (convert-node->sexp node-id)
-       convert-sexp->editor)))
+       convert-sexp->editor
+       (ed/move-most :parent))))

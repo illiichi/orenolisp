@@ -17,8 +17,8 @@
         (ed/jump arg-node-id)
         (ed/swap element-id))))
 
-(defn- add-map-arguments [editor]
-  (let [editor-map (find-nearest-ident editor "map")
+(defn- add-map-arguments [editor ugen-name]
+  (let [editor-map (find-nearest-ident editor ugen-name)
         map-ident-id (ed/get-id editor-map :child)
         target-id (ed/get-id editor :self)
         end-of-arg (-> editor-map
@@ -48,11 +48,58 @@
                           (-> editor
                               (ed/push-new-multiple-cursors)
                               (ed/jump node-id)
-                              (add-map-arguments)))
+                              (add-map-arguments "map")))
                         (wrap-by-map editor first-node-id)
                         rest-node-ids))))
         (ed/reverse-multicursors))
-    (add-map-arguments editor)))
+    (add-map-arguments editor "map")))
+
+(defn- transpose-vector [editor]
+  (let [current-id (-> editor (ed/get-id :self))
+        arg-vectors (->> (-> editor (ed/move :parent)
+                             (ed/get-children-ids))
+                         (drop-while #(not= current-id %)))
+        [first-arg-ids & initial-rest-args-ids] (->> arg-vectors
+                                                     (map #(ed/get-children-ids editor %)))]
+    (loop [editor editor
+           [first-arg-id & rest-first-ids] first-arg-ids
+           rest-args-ids initial-rest-args-ids]
+      (let [next-editor (-> editor
+                            (ed/add first-arg-id :parent (form/vector)))
+            parent-vec-id (ed/get-id next-editor :self)
+            [next-editor rest-args-ids] (reduce (fn [[editor acc] [rest-arg-id & rest-ids]]
+                                                  [(if rest-arg-id
+                                                     (-> editor
+                                                         (ed/jump rest-arg-id)
+                                                         (ed/transport :child parent-vec-id))
+                                                     editor)
+                                                   (conj acc rest-ids)])
+                                                [next-editor []] rest-args-ids)]
+        (if (nil? rest-first-ids)
+          (reduce ed/delete next-editor (rest arg-vectors))
+          (recur next-editor rest-first-ids rest-args-ids))))))
+
+(defn- convert-additional-t-map-argument [org-editor]
+  (-> (reduce (fn [editor node-id]
+                (ed/add-editor editor node-id :child (conv/sub-editor org-editor)))
+              org-editor
+              (ed/get-children-ids (-> org-editor (ed/move [:parent :left]))))
+      (ed/delete (ed/get-id org-editor :parent))))
+
+(defn transform-to-t-map [editor]
+  (if (ed/has-mark? editor)
+    (let [editor (-> (transform-to-map editor)
+                     (find-nearest-ident "map")
+                     (ed/move :child))
+          map-id (ed/get-id editor :self)]
+      (-> editor
+          (ed/edit map-id #(assoc % :value "u/t-map"))
+          (ed/move [:right :right])
+          (transpose-vector)))
+
+    (-> editor
+        (add-map-arguments "u/t-map")
+        (convert-additional-t-map-argument))))
 
 (defn wrap-by-reduce [editor]
   (let [parent-editor (-> '(u/reduce-> (fn [acc x]) [x])
@@ -85,10 +132,11 @@
                        (conv/convert-sexp->editor))]
     (ed/add-editor editor :self new-editor)))
 
-(defn wrap-by-range [editor]
-  (transform-sexp editor
-                  (fn [sexp]
-                    (list 'u/lin-lin '(lf-cub:kr 1) sexp sexp))))
+(defn wrap-by-range [ugen]
+  (fn [editor]
+   (transform-sexp editor
+                   (fn [sexp]
+                     (list 'u/lin-lin (list ugen 1) sexp sexp)))))
 
 (defn wrap-by-line [editor]
   (let [node-id (ed/get-id editor :self)]
