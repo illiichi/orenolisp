@@ -20,7 +20,7 @@
     :gauge (fix/->FixLayoutOption 5 0 [[32 5] [15 5] [15 15]])
     :paren (fl/->FlowOption true 10 0 5 2 theme/label-font-width theme/label-font-height)
     :newline (l/->Size-newline 0 theme/label-font-height)
-    :vector (fl/->FlowOption false 8 0 5 2 theme/label-font-width theme/label-font-height)
+    :vector (fl/->FlowOption false 8 3 5 2 theme/label-font-width theme/label-font-height)
     (ut/error "unknown type" type m)))
 
 
