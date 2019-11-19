@@ -30,4 +30,4 @@
     (mc/start-loop (async/pipe ki/keyboard-ch mc/event-ch))
     (log/start)
     (vw/start)
-    (viewport/move-center))
+    (viewport/move-initial-position))
