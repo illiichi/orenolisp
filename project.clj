@@ -9,5 +9,5 @@
                  [org.openjfx/javafx-graphics "11.0.2"]
                  [org.clojure/core.async "0.4.490"]
                  [org.clojure/core.match "0.3.0"]
-                 [llll "0.1.1"]]
+                 [llll "0.1.2"]]
   :jvm-opts ^:replace [])
