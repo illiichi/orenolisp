@@ -5,6 +5,18 @@ This is a structural clojure editor for producing sound using Overtone(https://g
 see:
 https://youtu.be/RuU0HI-paik
 
+# How to launch:
+Dependencies:
+- A java runtime that supports class file version 54.0 or greater (Java 10 or OpenJDK 11 supports this).
+- Leiningen.
+- Supercollider IDE
+
+1. launch SuperCollider IDE and evaluate below SC codes:
+  - `s.options.maxLogins = 10;`
+  - `s.boot;`
+2. In your terminal, run `lein repl`.
+3. Then paste this: `(load-file "src/orenolisp/launch.clj")`
+
 # Features
 
 ## Sparse keymap which depends on context
